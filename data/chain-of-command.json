@@ -1,0 +1,65 @@
+{
+  "updatedAt": "2026-03-16",
+  "sections": [
+    {
+      "title": "Executive Command",
+      "members": [
+        {
+          "role": "Owner",
+          "name": "Tallahassee City Roleplay Leadership"
+        },
+        {
+          "role": "Co-Owner",
+          "name": "Open"
+        }
+      ]
+    },
+    {
+      "title": "Senior Administration",
+      "members": [
+        {
+          "role": "Community Director",
+          "name": "Open"
+        },
+        {
+          "role": "Operations Director",
+          "name": "Open"
+        }
+      ]
+    },
+    {
+      "title": "Department Command",
+      "members": [
+        {
+          "role": "Patrol Command",
+          "name": "Open"
+        },
+        {
+          "role": "Fire & Rescue Command",
+          "name": "Open"
+        },
+        {
+          "role": "Civilian Command",
+          "name": "Open"
+        }
+      ]
+    },
+    {
+      "title": "Staff Team",
+      "members": [
+        {
+          "role": "Senior Moderator",
+          "name": "Open"
+        },
+        {
+          "role": "Moderator",
+          "name": "Open"
+        },
+        {
+          "role": "Trial Staff",
+          "name": "Open"
+        }
+      ]
+    }
+  ]
+}

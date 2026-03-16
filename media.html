@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tallahassee City Roleplay | Departments</title>
+    <title>Tallahassee City Roleplay | Media</title>
     <meta
       name="description"
-      content="Explore the Tallahassee City Roleplay departments, from patrol operations to fire rescue and civilian roleplay."
+      content="Browse Tallahassee City Roleplay server media and manage approved gallery posts through Discord role-gated access."
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -26,9 +26,9 @@
         <nav class="site-nav" aria-label="Primary navigation">
           <a href="index.html">Home</a>
           <a href="rules.html">Rules</a>
-          <a class="active" href="departments.html">Departments</a>
+          <a href="departments.html">Departments</a>
           <a href="chain-of-command.html">Chain of Command</a>
-          <a href="media.html">Media</a>
+          <a class="active" href="media.html">Media</a>
           <a href="discord.html">Discord</a>
         </nav>
 
@@ -40,18 +40,18 @@
       <section class="page-hero">
         <div class="container page-hero-grid">
           <div class="page-hero-copy">
-            <span class="section-kicker">Departments</span>
-            <h1>Multiple paths, one city, and better scenes when they work together.</h1>
+            <span class="section-kicker">Server media</span>
+            <h1>A public gallery with protected posting access.</h1>
             <p>
-              Tallahassee City Roleplay is strongest when every department has a real role in the bigger story. These
-              pages are built to show players where they fit and how each part of the community supports the rest.
+              Everyone can view the media page, but only the configured owner account and people with the allowed
+              Discord role can sign in and publish new entries to the gallery.
             </p>
           </div>
 
           <div class="page-hero-side">
             <article class="side-panel">
-              <span class="mini-label">City focus</span>
-              <strong>Patrol, fire rescue, civilian roleplay, and support systems that all feed into each other.</strong>
+              <span class="mini-label">Permissions</span>
+              <strong>Posting requires Discord sign-in, the correct guild membership, and the allowed role or owner ID.</strong>
             </article>
           </div>
         </div>
@@ -59,29 +59,29 @@
 
       <section class="section">
         <div class="container">
-          <div class="cta-panel coming-soon-panel">
-            <div>
-              <span class="section-kicker">Status</span>
-              <h2>Departments are coming soon.</h2>
-              <p>
-                The department breakdown is still being finalized. Full information, access details, and anything tied
-                to joining a department will be posted once that part of the city is ready.
-              </p>
-            </div>
-            <div class="coming-soon-badge">Coming Soon</div>
+          <div class="page-note" id="media-page-status" hidden></div>
+          <div class="admin-card" id="media-auth-shell">
+            <p class="muted-text">Loading media permissions...</p>
           </div>
         </div>
       </section>
 
       <section class="section">
         <div class="container">
-          <div class="cta-panel">
-            <div>
-              <span class="section-kicker">Getting involved</span>
-              <h2>Watch Discord for the full department release.</h2>
-              <p>When department information is ready, updates, requirements, and announcements will be posted through the community hub first.</p>
-            </div>
-            <a class="button button-primary" href="discord.html">Go to Discord Page</a>
+          <div class="section-heading">
+            <span class="section-kicker">Gallery</span>
+            <h2>Server clips, screenshots, and highlights.</h2>
+            <p>
+              This gallery is built for approved media links. Authorized users can add images or videos from the web
+              without needing to touch the site files directly.
+            </p>
+          </div>
+
+          <div class="media-grid" id="media-gallery">
+            <article class="empty-card">
+              <h3>Loading media...</h3>
+              <p>Once the gallery data is ready, entries will appear here.</p>
+            </article>
           </div>
         </div>
       </section>
@@ -99,5 +99,7 @@
         <p>Serious scenes. Clear standards. Tallahassee City Roleplay.</p>
       </div>
     </footer>
+
+    <script defer src="media.js"></script>
   </body>
 </html>
