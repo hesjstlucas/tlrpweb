@@ -1,0 +1,30 @@
+<svg width="120" height="138" viewBox="0 0 120 138" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="tlrpGradient" x1="18" y1="16" x2="96" y2="120" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EBF4FF" />
+      <stop offset="0.45" stop-color="#78A8FF" />
+      <stop offset="1" stop-color="#2F5FE1" />
+    </linearGradient>
+  </defs>
+  <path
+    d="M60 4L104 20V69C104 95 88 115 60 132C32 115 16 95 16 69V20L60 4Z"
+    fill="#08111E"
+    stroke="#9EBEFF"
+    stroke-width="4"
+  />
+  <path d="M60 14L94 26V68C94 89 81 105 60 117C39 105 26 89 26 68V26L60 14Z" fill="url(#tlrpGradient)" opacity="0.95" />
+  <path d="M34 47H86" opacity="0.28" stroke="#F6FAFF" stroke-width="4" />
+  <path d="M40 69H80" opacity="0.22" stroke="#F6FAFF" stroke-width="4" />
+  <text
+    x="60"
+    y="82"
+    fill="#06101C"
+    font-family="Bahnschrift, Trebuchet MS, sans-serif"
+    font-size="25"
+    font-weight="800"
+    letter-spacing="-1.8"
+    text-anchor="middle"
+  >
+    TLRP
+  </text>
+</svg>
