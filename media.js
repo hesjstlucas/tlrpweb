@@ -40,6 +40,8 @@ function renderAuthShell(session) {
   }
 
   const config = session?.config || {};
+  const permissions = session?.session?.permissions || {};
+  const canPublishMedia = Boolean(permissions.media || session?.session?.authorized);
 
   if (!session?.authenticated) {
     if (!config.discordConfigured) {
@@ -65,13 +67,13 @@ function renderAuthShell(session) {
         </p>
       </div>
       <div class="admin-card-actions">
-        <a class="button button-primary" href="/api/auth/discord/login">Continue with Discord</a>
+        <a class="button button-primary" href="/api/auth/discord/login?next=/media.html">Continue with Discord</a>
       </div>
     `;
     return;
   }
 
-  if (!session.session?.authorized) {
+  if (!canPublishMedia) {
     shell.innerHTML = `
       <div class="admin-card-copy">
         <span class="section-kicker">Signed in</span>
@@ -81,7 +83,7 @@ function renderAuthShell(session) {
         </p>
       </div>
       <div class="admin-card-actions">
-        <a class="button button-secondary" href="/api/auth/logout">Log out</a>
+        <a class="button button-secondary" href="/api/auth/logout?next=/media.html">Log out</a>
       </div>
     `;
     return;
@@ -98,7 +100,7 @@ function renderAuthShell(session) {
         </p>
       </div>
       <div class="admin-card-actions">
-        <a class="button button-secondary" href="/api/auth/logout">Log out</a>
+        <a class="button button-secondary" href="/api/auth/logout?next=/media.html">Log out</a>
       </div>
     `;
     return;
@@ -135,7 +137,7 @@ function renderAuthShell(session) {
       </label>
       <div class="admin-card-actions media-form-full">
         <button class="button button-primary" type="submit">Publish media</button>
-        <a class="button button-secondary" href="/api/auth/logout">Log out</a>
+        <a class="button button-secondary" href="/api/auth/logout?next=/media.html">Log out</a>
       </div>
       <p class="muted-text media-form-full" id="media-form-status"></p>
     </form>

@@ -1,24 +1,19 @@
 const { hasSessionSecret, readSession } = require("../_lib/auth");
 const { hasGithubWriteConfig } = require("../_lib/github");
-
-function parseAllowedRoles() {
-  return (process.env.DISCORD_ALLOWED_ROLE_ID || "")
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean);
-}
+const { getPermissionConfig } = require("../_lib/permissions");
 
 module.exports = async function handler(req, res) {
   const session = readSession(req);
-  const allowedRoles = parseAllowedRoles();
+  const permissionConfig = getPermissionConfig();
   const ownerConfigured = Boolean(process.env.DISCORD_OWNER_ID);
+  const guildConfigured = Boolean(process.env.DISCORD_GUILD_ID);
   const storageConfigured = hasGithubWriteConfig() || !process.env.VERCEL;
   const discordConfigured = Boolean(
     process.env.DISCORD_CLIENT_ID &&
       process.env.DISCORD_CLIENT_SECRET &&
       process.env.DISCORD_REDIRECT_URI &&
       hasSessionSecret() &&
-      (ownerConfigured || (allowedRoles.length > 0 && process.env.DISCORD_GUILD_ID))
+      (ownerConfigured || (permissionConfig.anyRoleConfigured && guildConfigured))
   );
 
   res.setHeader("Content-Type", "application/json");
@@ -31,9 +26,12 @@ module.exports = async function handler(req, res) {
         discordConfigured,
         storageConfigured,
         ownerConfigured,
-        roleConfigured: allowedRoles.length > 0,
-        guildConfigured: Boolean(process.env.DISCORD_GUILD_ID),
-        sessionSecretConfigured: hasSessionSecret()
+        roleConfigured: permissionConfig.mediaRoleConfigured,
+        guildConfigured,
+        sessionSecretConfigured: hasSessionSecret(),
+        mediaRoleConfigured: permissionConfig.mediaRoleConfigured,
+        applicationCreatorConfigured: permissionConfig.applicationCreatorConfigured,
+        applicationManagerConfigured: permissionConfig.applicationManagerConfigured
       }
     })
   );

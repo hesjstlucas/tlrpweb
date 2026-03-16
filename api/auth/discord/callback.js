@@ -1,21 +1,31 @@
 const {
+  buildAuthRedirect,
+  clearNextCookie,
   clearStateCookie,
   createSessionCookie,
   hasSessionSecret,
+  readNext,
   readState
 } = require("../../_lib/auth");
+const { getPermissionConfig, getPermissionFlags } = require("../../_lib/permissions");
 
-function parseAllowedRoles() {
-  return (process.env.DISCORD_ALLOWED_ROLE_ID || "")
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean);
+function getAuthStatusForPath(nextPath, permissions) {
+  if (nextPath === "/applications.html") {
+    return permissions.applicationCreate || permissions.applicationManage ? "success" : "denied";
+  }
+
+  if (nextPath === "/media.html") {
+    return permissions.media ? "success" : "denied";
+  }
+
+  return permissions.media || permissions.applicationCreate || permissions.applicationManage ? "success" : "denied";
 }
 
 module.exports = async function handler(req, res) {
   const { code, state } = req.query;
   const expectedState = readState(req);
-  const allowedRoles = parseAllowedRoles();
+  const nextPath = readNext(req);
+  const permissionConfig = getPermissionConfig();
   const guildId = process.env.DISCORD_GUILD_ID || "";
   const ownerId = process.env.DISCORD_OWNER_ID || "";
 
@@ -24,18 +34,18 @@ module.exports = async function handler(req, res) {
     !process.env.DISCORD_CLIENT_SECRET ||
     !process.env.DISCORD_REDIRECT_URI ||
     !hasSessionSecret() ||
-    (allowedRoles.length > 0 && !guildId) ||
-    (!ownerId && allowedRoles.length === 0)
+    (permissionConfig.anyRoleConfigured && !guildId) ||
+    (!ownerId && !permissionConfig.anyRoleConfigured)
   ) {
-    res.setHeader("Set-Cookie", clearStateCookie());
-    res.writeHead(302, { Location: "/media.html?auth=misconfigured" });
+    res.setHeader("Set-Cookie", [clearStateCookie(), clearNextCookie()]);
+    res.writeHead(302, { Location: buildAuthRedirect(nextPath, "misconfigured") });
     res.end();
     return;
   }
 
   if (!code || !state || !expectedState || expectedState !== state) {
-    res.setHeader("Set-Cookie", clearStateCookie());
-    res.writeHead(302, { Location: "/media.html?auth=failed" });
+    res.setHeader("Set-Cookie", [clearStateCookie(), clearNextCookie()]);
+    res.writeHead(302, { Location: buildAuthRedirect(nextPath, "failed") });
     res.end();
     return;
   }
@@ -95,27 +105,28 @@ module.exports = async function handler(req, res) {
     }
 
     const isOwner = Boolean(ownerId) && user.id === ownerId;
-    const hasAllowedRole = allowedRoles.some((roleId) => memberRoles.includes(roleId));
-    const authorized = isOwner || hasAllowedRole;
+    const permissions = getPermissionFlags({ isOwner, memberRoles });
+    const authorized = permissions.media;
 
     const sessionCookie = createSessionCookie({
       discordId: user.id,
       username: user.username,
       displayName: user.global_name || user.username,
       authorized,
+      permissions,
       inGuild,
       isOwner,
       roles: memberRoles
     });
 
-    res.setHeader("Set-Cookie", [sessionCookie, clearStateCookie()]);
+    res.setHeader("Set-Cookie", [sessionCookie, clearStateCookie(), clearNextCookie()]);
     res.writeHead(302, {
-      Location: `/media.html?auth=${authorized ? "success" : "denied"}`
+      Location: buildAuthRedirect(nextPath, getAuthStatusForPath(nextPath, permissions))
     });
     res.end();
   } catch {
-    res.setHeader("Set-Cookie", clearStateCookie());
-    res.writeHead(302, { Location: "/media.html?auth=failed" });
+    res.setHeader("Set-Cookie", [clearStateCookie(), clearNextCookie()]);
+    res.writeHead(302, { Location: buildAuthRedirect(nextPath, "failed") });
     res.end();
   }
 };

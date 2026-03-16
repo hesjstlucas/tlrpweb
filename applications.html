@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tallahassee City Roleplay | Applications</title>
+    <meta
+      name="description"
+      content="Track Tallahassee City Roleplay applications with Discord-gated creation and management permissions."
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page-bg"></div>
+
+    <header class="site-header">
+      <div class="container header-row">
+        <a class="brand" href="index.html">
+          <img src="assets/tlrp-mark.svg" alt="Tallahassee City Roleplay logo" />
+          <span class="brand-copy">
+            <span>Tallahassee City</span>
+            <strong>Roleplay</strong>
+          </span>
+        </a>
+
+        <nav class="site-nav" aria-label="Primary navigation">
+          <a href="index.html">Home</a>
+          <a href="rules.html">Rules</a>
+          <a href="departments.html">Departments</a>
+          <a class="active" href="applications.html">Applications</a>
+          <a href="chain-of-command.html">Chain of Command</a>
+          <a href="media.html">Media</a>
+          <a href="discord.html">Discord</a>
+        </nav>
+
+        <a class="header-cta" href="discord.html">Join Discord</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="page-hero">
+        <div class="container page-hero-grid">
+          <div class="page-hero-copy">
+            <span class="section-kicker">Applications</span>
+            <h1>Track who applied, who made it, and who still needs a decision.</h1>
+            <p>
+              This page works like an internal application tracker. Directive+ can create new application records, and
+              Management+ can accept or deny them after review.
+            </p>
+          </div>
+
+          <div class="page-hero-side">
+            <article class="side-panel">
+              <span class="mini-label">Permissions</span>
+              <strong>Directive+ creates application entries. Management+ reviews them. Everyone else stays view-only.</strong>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <div class="page-note" id="applications-page-status" hidden></div>
+          <div class="admin-card" id="applications-auth-shell">
+            <p class="muted-text">Loading application permissions...</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <div class="section-heading">
+            <span class="section-kicker">Workflow</span>
+            <h2>One place to log decisions and keep the staff side organized.</h2>
+            <p>
+              Use this as a clean record of department applications, leadership reviews, and final decisions without
+              handing edit access to everyone.
+            </p>
+          </div>
+
+          <div class="card-grid card-grid-three">
+            <article class="info-card">
+              <h3>Directive+ creates records</h3>
+              <p>Application entries can be logged here after submissions come in through Discord, forms, or staff intake.</p>
+            </article>
+            <article class="info-card">
+              <h3>Management+ reviews</h3>
+              <p>Reviewers can accept or deny pending entries and leave a short decision note for clarity.</p>
+            </article>
+            <article class="info-card">
+              <h3>Repo-backed history</h3>
+              <p>The tracker writes into the repository data file, so Vercel stays in sync and changes are traceable.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section">
+        <div class="container">
+          <div class="section-heading">
+            <span class="section-kicker">Tracker</span>
+            <h2>Pending and decided application records.</h2>
+            <p>
+              Everyone can view the tracker, but only staff with the configured Discord permissions can create or
+              review records on the site.
+            </p>
+          </div>
+
+          <div class="applications-grid" id="applications-list">
+            <article class="empty-card">
+              <h3>Loading applications...</h3>
+              <p>Once the tracker data is ready, entries will appear here.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container footer-row">
+        <a class="brand" href="index.html">
+          <img src="assets/tlrp-mark.svg" alt="" />
+          <span class="brand-copy">
+            <span>Tallahassee City</span>
+            <strong>Roleplay</strong>
+          </span>
+        </a>
+        <p>Serious scenes. Clear standards. Tallahassee City Roleplay.</p>
+      </div>
+    </footer>
+
+    <script defer src="applications.js"></script>
+  </body>
+</html>

@@ -7,13 +7,26 @@ Standalone Tallahassee City Roleplay site for Vercel.
 - `index.html` is the homepage.
 - `rules.html` contains the server rules.
 - `departments.html` contains the departments page.
+- `applications.html` contains the application tracker.
 - `chain-of-command.html` shows the leadership structure.
 - `media.html` shows the public media gallery and the Discord-gated publishing tools.
 
 ## Data files
 
+- `data/applications.json` stores the application tracker entries.
 - `data/chain-of-command.json` powers the chain-of-command page.
 - `data/media.json` stores media gallery entries.
+
+## Application tracker access
+
+The application tracker is public to view, but staff actions are role-gated.
+
+Allowed actions are:
+
+- `DISCORD_APPLICATION_CREATOR_ROLE_ID` for Directive+ users who should create application records
+- `DISCORD_APPLICATION_MANAGER_ROLE_ID` for Management+ users who should accept or deny records
+
+Each value can be a single role ID or a comma-separated list if you want multiple roles to count.
 
 ## Chain of command editing
 
@@ -53,12 +66,17 @@ On Vercel, new media items are written back into `data/media.json` through the G
 
 - `DISCORD_OWNER_ID`
 - `DISCORD_ALLOWED_ROLE_ID`
+- `DISCORD_APPLICATION_CREATOR_ROLE_ID`
+- `DISCORD_APPLICATION_MANAGER_ROLE_ID`
 - `DISCORD_GUILD_ID`
 
 Notes:
 
 - `DISCORD_ALLOWED_ROLE_ID` can be a single role ID or a comma-separated list.
+- `DISCORD_APPLICATION_CREATOR_ROLE_ID` can be a single role ID or a comma-separated list.
+- `DISCORD_APPLICATION_MANAGER_ROLE_ID` can be a single role ID or a comma-separated list.
 - If you only want the owner account to post, you can leave `DISCORD_ALLOWED_ROLE_ID` empty.
+- If the owner should also handle applications, `DISCORD_OWNER_ID` already overrides the role checks.
 - If you use role-based access, `DISCORD_GUILD_ID` must also be set.
 
 ### GitHub writeback for media posts

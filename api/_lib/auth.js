@@ -2,6 +2,7 @@ const crypto = require("crypto");
 
 const SESSION_COOKIE = "tcrp_session";
 const STATE_COOKIE = "tcrp_discord_state";
+const NEXT_COOKIE = "tcrp_auth_next";
 const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 7;
 const STATE_TTL_SECONDS = 60 * 10;
 
@@ -74,6 +75,14 @@ function generateDiscordState() {
   return crypto.randomBytes(24).toString("hex");
 }
 
+function sanitizeNextPath(value) {
+  if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//")) {
+    return "/media.html";
+  }
+
+  return value;
+}
+
 function createStateCookie(state) {
   return serializeCookie(STATE_COOKIE, state, {
     httpOnly: true,
@@ -95,6 +104,35 @@ function clearStateCookie() {
 function readState(req) {
   const cookies = parseCookies(req.headers.cookie || "");
   return cookies[STATE_COOKIE] || null;
+}
+
+function createNextCookie(nextPath) {
+  return serializeCookie(NEXT_COOKIE, sanitizeNextPath(nextPath), {
+    httpOnly: true,
+    maxAge: STATE_TTL_SECONDS,
+    sameSite: "Lax",
+    secure: true
+  });
+}
+
+function clearNextCookie() {
+  return serializeCookie(NEXT_COOKIE, "", {
+    httpOnly: true,
+    maxAge: 0,
+    sameSite: "Lax",
+    secure: true
+  });
+}
+
+function readNext(req) {
+  const cookies = parseCookies(req.headers.cookie || "");
+  return sanitizeNextPath(cookies[NEXT_COOKIE] || "/media.html");
+}
+
+function buildAuthRedirect(nextPath, status) {
+  const redirectUrl = new URL(sanitizeNextPath(nextPath), "https://tcrp.local");
+  redirectUrl.searchParams.set("auth", status);
+  return `${redirectUrl.pathname}${redirectUrl.search}`;
 }
 
 function createSessionCookie(session) {
@@ -154,13 +192,18 @@ function readSession(req) {
 }
 
 module.exports = {
+  buildAuthRedirect,
+  clearNextCookie,
   SESSION_COOKIE,
   clearSessionCookie,
   clearStateCookie,
+  createNextCookie,
   createSessionCookie,
   createStateCookie,
   generateDiscordState,
   hasSessionSecret,
+  readNext,
   readSession,
-  readState
+  readState,
+  sanitizeNextPath
 };
