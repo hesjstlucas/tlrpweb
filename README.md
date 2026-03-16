@@ -2,6 +2,23 @@
 
 Standalone Tallahassee City Roleplay site for Vercel.
 
+## One-step env setup
+
+If you do not want to add the Vercel environment variables by hand, run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\setup-vercel-env.ps1
+```
+
+That script:
+
+- asks for the Discord and GitHub values once
+- generates `SESSION_SECRET` for you
+- saves a private local copy to `.env.vercel.local`
+- uploads the values to Vercel through the CLI or `npx vercel`
+
+You still need to add the redirect URL it prints into the Discord Developer Portal, because Discord controls that setting on their side.
+
 ## Main pages
 
 - `index.html` is the homepage.
