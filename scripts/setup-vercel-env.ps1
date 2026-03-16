@@ -205,7 +205,7 @@ function Upload-VercelVariables {
   foreach ($environment in $Environments) {
     foreach ($entry in $Values.GetEnumerator() | Sort-Object Name) {
       Write-Host "Uploading $($entry.Key) -> $environment" -ForegroundColor Cyan
-      Invoke-Vercel -Arguments @("env", "add", $entry.Key, $environment, "--force", "--yes", "--value", $entry.Value)
+      Invoke-Vercel -Arguments @("env", "add", $entry.Key, $environment, "--force", "--value", $entry.Value)
     }
   }
 }
