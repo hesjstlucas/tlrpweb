@@ -1,5 +1,5 @@
 param(
-  [string[]]$Targets = @("development", "preview", "production"),
+  [string[]]$Targets = @("development", "production"),
   [switch]$SkipUpload,
   [switch]$SkipLink,
   [switch]$SkipDeploy
@@ -202,9 +202,11 @@ function Upload-VercelVariables {
     [string[]]$Environments
   )
 
-  foreach ($entry in $Values.GetEnumerator() | Sort-Object Name) {
-    Write-Host "Uploading $($entry.Key) -> all environments" -ForegroundColor Cyan
-    Invoke-Vercel -Arguments @("env", "add", $entry.Key, "--force", "--yes", "--value", $entry.Value)
+  foreach ($environment in $Environments) {
+    foreach ($entry in $Values.GetEnumerator() | Sort-Object Name) {
+      Write-Host "Uploading $($entry.Key) -> $environment" -ForegroundColor Cyan
+      Invoke-Vercel -Arguments @("env", "add", $entry.Key, $environment, "--force", "--yes", "--value", $entry.Value)
+    }
   }
 }
 
