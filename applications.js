@@ -94,9 +94,10 @@ function renderAuthShell(session) {
     shell.innerHTML = `
       <div class="admin-card-copy">
         <span class="section-kicker">Application permissions</span>
-        <h2>Sign in with Discord to use the tracker tools.</h2>
+        <h2>Sign in with Discord to use the application tools.</h2>
         <p>
-          Directive+ can create application records. Management+ can accept or deny pending records.
+          Directive+ can publish the large public application buttons. Management+ can still review tracker records
+          below.
         </p>
       </div>
       <div class="admin-card-actions">
@@ -141,64 +142,114 @@ function renderAuthShell(session) {
   }
 
   const permissionChips = [
-    canCreate ? '<span class="permission-chip">Directive+ Create Access</span>' : "",
+    canCreate ? '<span class="permission-chip">Directive+ Publish Access</span>' : "",
     canManage ? '<span class="permission-chip">Management+ Review Access</span>' : "",
     !config.storageConfigured ? '<span class="permission-chip permission-chip-warning">Storage Not Ready</span>' : ""
   ]
     .filter(Boolean)
     .join("");
 
-  const creationForm = canCreate
+  const publishSection = canCreate
     ? `
-      <form class="media-form" id="applications-form">
-        <label>
-          <span>Applicant name</span>
-          <input maxlength="80" name="applicantName" placeholder="Lucas" required type="text" />
-        </label>
-        <label>
-          <span>Discord username or ID</span>
-          <input maxlength="80" name="applicantDiscord" placeholder="@hesjstlucas or 1234567890" required type="text" />
-        </label>
-        <label>
-          <span>Department</span>
-          <input maxlength="60" name="department" placeholder="Law Enforcement" required type="text" />
-        </label>
-        <label>
-          <span>Position</span>
-          <input maxlength="70" name="position" placeholder="Deputy" required type="text" />
-        </label>
-        <label class="media-form-full">
-          <span>Reference link</span>
-          <input name="referenceLink" placeholder="https://forms.google.com/... or ticket link" type="url" />
-        </label>
-        <label class="media-form-full">
-          <span>Summary</span>
-          <textarea maxlength="600" name="summary" placeholder="Quick summary of the application and anything staff should know." required></textarea>
-        </label>
-        <div class="admin-card-actions media-form-full">
-          <button class="button button-primary" type="submit"${config.storageConfigured ? "" : " disabled"}>Create record</button>
-          <a class="button button-secondary" href="${links.logout}">Log out</a>
+      <section class="admin-subsection">
+        <div class="admin-subsection-copy">
+          <h3>Publish a public application button</h3>
+          <p>
+            Create a large application card for players to click. It will appear in the Current Applications section
+            above and open its own page on TLRPX in a new tab.
+          </p>
         </div>
-        <p class="muted-text media-form-full" id="applications-form-status"></p>
-      </form>
+        <form class="media-form" id="application-post-form">
+          <label>
+            <span>Application title</span>
+            <input maxlength="90" name="title" placeholder="Law Enforcement Application" required type="text" />
+          </label>
+          <label>
+            <span>Department</span>
+            <input maxlength="60" name="department" placeholder="Law Enforcement" required type="text" />
+          </label>
+          <label class="media-form-full">
+            <span>Short overview</span>
+            <textarea maxlength="240" name="overview" placeholder="Short text for the big button players see on the applications page." required></textarea>
+          </label>
+          <label class="media-form-full">
+            <span>Full details</span>
+            <textarea maxlength="2500" name="details" placeholder="Full application page details, requirements, expectations, and how the process works." required></textarea>
+          </label>
+          <label class="media-form-full">
+            <span>Apply link</span>
+            <input name="applyLink" placeholder="https://discord.gg/... or https://forms.google.com/..." type="url" />
+          </label>
+          <div class="admin-card-actions media-form-full">
+            <button class="button button-primary" type="submit"${config.storageConfigured ? "" : " disabled"}>Publish Application Button</button>
+          </div>
+          <p class="muted-text media-form-full" id="application-post-status"></p>
+        </form>
+      </section>
     `
-    : `
-      <div class="admin-card-actions">
-        <a class="button button-secondary" href="${links.logout}">Log out</a>
-      </div>
-    `;
+    : "";
+
+  const trackerSection = canCreate
+    ? `
+      <section class="admin-subsection">
+        <div class="admin-subsection-copy">
+          <h3>Create a staff tracker record</h3>
+          <p>
+            Use this to log incoming applications for the internal review list below, separate from the public
+            application buttons.
+          </p>
+        </div>
+        <form class="media-form" id="applications-form">
+          <label>
+            <span>Applicant name</span>
+            <input maxlength="80" name="applicantName" placeholder="Lucas" required type="text" />
+          </label>
+          <label>
+            <span>Discord username or ID</span>
+            <input maxlength="80" name="applicantDiscord" placeholder="@hesjstlucas or 1234567890" required type="text" />
+          </label>
+          <label>
+            <span>Department</span>
+            <input maxlength="60" name="department" placeholder="Law Enforcement" required type="text" />
+          </label>
+          <label>
+            <span>Position</span>
+            <input maxlength="70" name="position" placeholder="Deputy" required type="text" />
+          </label>
+          <label class="media-form-full">
+            <span>Reference link</span>
+            <input name="referenceLink" placeholder="https://forms.google.com/... or ticket link" type="url" />
+          </label>
+          <label class="media-form-full">
+            <span>Summary</span>
+            <textarea maxlength="600" name="summary" placeholder="Quick summary of the application and anything staff should know." required></textarea>
+          </label>
+          <div class="admin-card-actions media-form-full">
+            <button class="button button-secondary" type="submit"${config.storageConfigured ? "" : " disabled"}>Create Tracker Record</button>
+          </div>
+          <p class="muted-text media-form-full" id="applications-form-status"></p>
+        </form>
+      </section>
+    `
+    : "";
 
   shell.innerHTML = `
     <div class="admin-card-copy">
       <span class="section-kicker">Application access</span>
-      <h2>Manage the tracker with role-based permissions.</h2>
+      <h2>Publish public buttons and manage the staff-side review flow.</h2>
       <p>
         Signed in as ${escapeHtml(session.session.displayName || session.session.username || "Authorized user")}. Use
-        the tracker to log new application entries and review decisions with the right staff roles.
+        the public button publisher for players and the tracker below for internal review.
       </p>
       <div class="permissions-row">${permissionChips}</div>
     </div>
-    ${creationForm}
+    <div class="admin-card-stack">
+      ${publishSection}
+      ${trackerSection}
+    </div>
+    <div class="admin-card-actions">
+      <a class="button button-secondary" href="${links.logout}">Log out</a>
+    </div>
   `;
 
   if (!config.storageConfigured) {
@@ -209,50 +260,126 @@ function renderAuthShell(session) {
     return;
   }
 
-  const form = document.getElementById("applications-form");
-  if (!form) {
+  const postForm = document.getElementById("application-post-form");
+  if (postForm) {
+    const postStatus = document.getElementById("application-post-status");
+    postForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      postStatus.textContent = "Publishing application page...";
+
+      const formData = new FormData(postForm);
+      const payload = {
+        title: formData.get("title"),
+        department: formData.get("department"),
+        overview: formData.get("overview"),
+        details: formData.get("details"),
+        applyLink: formData.get("applyLink")
+      };
+
+      try {
+        const response = await fetch("/api/application-posts", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.error || "Application page could not be published.");
+        }
+
+        postForm.reset();
+        postStatus.textContent = "Application page published. Refreshing buttons...";
+        await loadApplicationPortals();
+        postStatus.textContent = "Application page published successfully.";
+      } catch (error) {
+        postStatus.textContent = error.message;
+      }
+    });
+  }
+
+  const trackerForm = document.getElementById("applications-form");
+  if (trackerForm) {
+    const trackerStatus = document.getElementById("applications-form-status");
+
+    trackerForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      trackerStatus.textContent = "Creating application record...";
+
+      const formData = new FormData(trackerForm);
+      const payload = {
+        applicantName: formData.get("applicantName"),
+        applicantDiscord: formData.get("applicantDiscord"),
+        department: formData.get("department"),
+        position: formData.get("position"),
+        referenceLink: formData.get("referenceLink"),
+        summary: formData.get("summary")
+      };
+
+      try {
+        const response = await fetch("/api/applications", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.error || "Application record could not be created.");
+        }
+
+        trackerForm.reset();
+        trackerStatus.textContent = "Tracker record created. Refreshing tracker...";
+        await loadApplications(session);
+        trackerStatus.textContent = "Tracker record created successfully.";
+      } catch (error) {
+        trackerStatus.textContent = error.message;
+      }
+    });
+  }
+}
+
+function renderApplicationPortals(items) {
+  const list = document.getElementById("application-portals-list");
+  if (!list) {
     return;
   }
 
-  const formStatus = document.getElementById("applications-form-status");
+  if (!items.length) {
+    list.innerHTML = `
+      <article class="empty-card">
+        <h3>No public applications posted yet.</h3>
+        <p>Directive+ can publish the first large application button from the staff tools above.</p>
+      </article>
+    `;
+    return;
+  }
 
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    formStatus.textContent = "Creating application record...";
-
-    const formData = new FormData(form);
-    const payload = {
-      applicantName: formData.get("applicantName"),
-      applicantDiscord: formData.get("applicantDiscord"),
-      department: formData.get("department"),
-      position: formData.get("position"),
-      referenceLink: formData.get("referenceLink"),
-      summary: formData.get("summary")
-    };
-
-    try {
-      const response = await fetch("/api/applications", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Application record could not be created.");
-      }
-
-      form.reset();
-      formStatus.textContent = "Application record created. Refreshing tracker...";
-      await loadApplications(session);
-      formStatus.textContent = "Application record created successfully.";
-    } catch (error) {
-      formStatus.textContent = error.message;
-    }
-  });
+  list.innerHTML = items
+    .map(
+      (item) => `
+        <a class="application-portal-card" href="application-detail.html?id=${encodeURIComponent(item.id)}" target="_blank" rel="noreferrer">
+          <div class="application-portal-copy">
+            <span class="section-kicker">${escapeHtml(item.department || "Application")}</span>
+            <h3>${escapeHtml(item.title || "Open Application")}</h3>
+            <p>${escapeHtml(item.overview || "Open this application page to read the full details.")}</p>
+            <div class="application-meta">
+              <span>Published by ${escapeHtml(item.createdBy || "Directive")}</span>
+              <span>${escapeHtml(formatDate(item.createdAt))}</span>
+            </div>
+          </div>
+          <div class="application-portal-side">
+            <span class="status-pill status-pill-accepted">Open Application</span>
+            <strong>Open in new tab</strong>
+          </div>
+        </a>
+      `
+    )
+    .join("");
 }
 
 function renderApplications(items, session) {
@@ -267,8 +394,8 @@ function renderApplications(items, session) {
   if (!items.length) {
     list.innerHTML = `
       <article class="empty-card">
-        <h3>No application records yet.</h3>
-        <p>Directive+ can create the first record once Discord permissions are configured.</p>
+        <h3>No tracker records yet.</h3>
+        <p>Directive+ can create the first internal tracker record from the staff tools above.</p>
       </article>
     `;
     return;
@@ -280,7 +407,7 @@ function renderApplications(items, session) {
         <article class="application-card" data-application-id="${escapeHtml(item.id)}">
           <div class="application-card-top">
             <div>
-              <span class="mini-label">Application</span>
+              <span class="mini-label">Tracker Record</span>
               <h3>${escapeHtml(item.applicantName)}</h3>
             </div>
             <span class="status-pill status-pill-${escapeHtml(item.status || "pending")}">${escapeHtml(
@@ -387,6 +514,30 @@ function renderApplications(items, session) {
   });
 }
 
+async function loadApplicationPortals() {
+  const list = document.getElementById("application-portals-list");
+  if (!list) {
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/application-posts", { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error("Failed to load application pages.");
+    }
+
+    const payload = await response.json();
+    renderApplicationPortals(Array.isArray(payload.items) ? payload.items : []);
+  } catch (error) {
+    list.innerHTML = `
+      <article class="empty-card">
+        <h3>Unable to load public applications.</h3>
+        <p>${escapeHtml(error.message)}</p>
+      </article>
+    `;
+  }
+}
+
 async function loadApplications(session) {
   const list = document.getElementById("applications-list");
   if (!list) {
@@ -431,11 +582,11 @@ async function loadApplicationsPage() {
     session = await sessionResponse.json();
     renderAuthShell(session);
   } catch {
-    showPageStatus("Discord permissions could not be checked right now. The tracker is still available below.", "warning");
+    showPageStatus("Discord permissions could not be checked right now. The public application pages are still available below.", "warning");
     renderAuthShell(session);
   }
 
-  await loadApplications(session);
+  await Promise.all([loadApplicationPortals(), loadApplications(session)]);
 }
 
 document.addEventListener("DOMContentLoaded", loadApplicationsPage);

@@ -6,7 +6,7 @@
     <title>Tallahassee City Roleplay | Applications</title>
     <meta
       name="description"
-      content="Track Tallahassee City Roleplay applications with Discord-gated creation and management permissions."
+      content="Open public Tallahassee City Roleplay application pages and manage the staff-side application tracker."
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -42,17 +42,17 @@
         <div class="container page-hero-grid">
           <div class="page-hero-copy">
             <span class="section-kicker">Applications</span>
-            <h1>Track who applied, who made it, and who still needs a decision.</h1>
+            <h1>Big public application buttons for players, plus staff tools behind the scenes.</h1>
             <p>
-              This page works like an internal application tracker. Directive+ can create new application records, and
-              Management+ can accept or deny them after review.
+              Directive+ can publish application pages that show up as large buttons on this page for every player to
+              click. Each one opens its own page on the TLRPX website in a new tab.
             </p>
           </div>
 
           <div class="page-hero-side">
             <article class="side-panel">
               <span class="mini-label">Permissions</span>
-              <strong>Directive+ creates application entries. Management+ reviews them. Everyone else stays view-only.</strong>
+              <strong>Directive+ publishes the public application pages. Management+ still handles staff-side review in the tracker below.</strong>
             </article>
           </div>
         </div>
@@ -70,26 +70,18 @@
       <section class="section">
         <div class="container">
           <div class="section-heading">
-            <span class="section-kicker">Workflow</span>
-            <h2>One place to log decisions and keep the staff side organized.</h2>
+            <span class="section-kicker">Current Applications</span>
+            <h2>Large clickable application buttons players can open right away.</h2>
             <p>
-              Use this as a clean record of department applications, leadership reviews, and final decisions without
-              handing edit access to everyone.
+              Each application card opens a dedicated TLRPX application page in a new tab so players can read the full
+              details before they continue to apply.
             </p>
           </div>
 
-          <div class="card-grid card-grid-three">
-            <article class="info-card">
-              <h3>Directive+ creates records</h3>
-              <p>Application entries can be logged here after submissions come in through Discord, forms, or staff intake.</p>
-            </article>
-            <article class="info-card">
-              <h3>Management+ reviews</h3>
-              <p>Reviewers can accept or deny pending entries and leave a short decision note for clarity.</p>
-            </article>
-            <article class="info-card">
-              <h3>Repo-backed history</h3>
-              <p>The tracker writes into the repository data file, so Vercel stays in sync and changes are traceable.</p>
+          <div class="application-portals-grid" id="application-portals-list">
+            <article class="empty-card">
+              <h3>Loading application pages...</h3>
+              <p>Once the public application pages are ready, they will appear here as large buttons.</p>
             </article>
           </div>
         </div>
@@ -98,11 +90,11 @@
       <section class="section">
         <div class="container">
           <div class="section-heading">
-            <span class="section-kicker">Tracker</span>
-            <h2>Pending and decided application records.</h2>
+            <span class="section-kicker">Staff Tracker</span>
+            <h2>Keep the internal application review flow organized.</h2>
             <p>
-              Everyone can view the tracker, but only staff with the configured Discord permissions can create or
-              review records on the site.
+              The public buttons above are for players. The tracker below stays focused on staff review, pending
+              decisions, and accepted or denied records.
             </p>
           </div>
 
