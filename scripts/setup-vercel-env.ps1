@@ -17,6 +17,14 @@ function Get-RunnerConfig {
     }
   }
 
+  $npxCmd = Join-Path ${env:ProgramFiles} "nodejs\npx.cmd"
+  if (Test-Path $npxCmd) {
+    return @{
+      Command = $npxCmd
+      Prefix = @("vercel@latest")
+    }
+  }
+
   $npx = Get-Command npx -ErrorAction SilentlyContinue
   if ($npx) {
     return @{
@@ -121,13 +129,36 @@ function Confirm-Choice {
 function Get-DefaultGithubRepository {
   try {
     $remote = git config --get remote.origin.url 2>$null
-    if ($remote -match "github\.com[:/](.+?)(\.git)?$") {
-      return $matches[1]
-    }
+    return Normalize-GithubRepository $remote
   } catch {
   }
 
   return ""
+}
+
+function Normalize-GithubRepository {
+  param(
+    [string]$Value
+  )
+
+  $trimmed = if ($null -eq $Value) { "" } else { $Value.Trim() }
+  if ([string]::IsNullOrWhiteSpace($trimmed)) {
+    return ""
+  }
+
+  if ($trimmed -match "^(https?://)?github\.com[:/](?<repo>[^/]+/[^/]+?)(\.git)?/?$") {
+    return $matches["repo"]
+  }
+
+  if ($trimmed -match "^(https?://)?(?<owner>[^/.]+)\.github\.io/(?<repo>[^/]+)/?$") {
+    return "$($matches["owner"])/$($matches["repo"])"
+  }
+
+  if ($trimmed -match "^[^/]+/[^/]+$") {
+    return $trimmed
+  }
+
+  return $trimmed
 }
 
 function New-SessionSecret {
@@ -174,7 +205,7 @@ function Upload-VercelVariables {
   foreach ($environment in $Environments) {
     foreach ($entry in $Values.GetEnumerator() | Sort-Object Name) {
       Write-Host "Uploading $($entry.Key) -> $environment" -ForegroundColor Cyan
-      Invoke-Vercel -Arguments @("env", "add", $entry.Key, $environment, "--force") -InputText $entry.Value
+      Invoke-Vercel -Arguments @("env", "add", $entry.Key, $environment, "--force", "--yes", "--value", $entry.Value)
     }
   }
 }
@@ -199,7 +230,8 @@ $cleanDomain = $defaultDomain -replace "^https?://", "" -replace "/+$", ""
 $redirectUri = "https://$cleanDomain/api/auth/discord/callback"
 
 $defaultRepository = Get-DefaultGithubRepository
-$githubRepository = Read-PlainValue -Label "GitHub repository" -Default $defaultRepository -Required
+$githubRepositoryInput = Read-PlainValue -Label "GitHub repository" -Default $defaultRepository -Required
+$githubRepository = Normalize-GithubRepository $githubRepositoryInput
 $githubBranch = Read-PlainValue -Label "GitHub branch" -Default "main" -Required
 
 $values = [ordered]@{
@@ -233,6 +265,10 @@ if (
   [string]::IsNullOrWhiteSpace($values.DISCORD_GUILD_ID)
 ) {
   throw "DISCORD_GUILD_ID is required when you use role IDs."
+}
+
+if ($values.GITHUB_REPOSITORY -notmatch "^[^/]+/[^/]+$") {
+  throw "GitHub repository must look like 'owner/repo'. Example: hesjstlucas/tlrpweb"
 }
 
 $envFilePath = Join-Path $repoRoot ".env.vercel.local"
