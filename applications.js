@@ -7,6 +7,16 @@ function escapeHtml(value) {
     .replaceAll("'", "&#39;");
 }
 
+let currentApplicationsSession = {
+  authenticated: false,
+  session: null,
+  config: {
+    discordConfigured: true,
+    storageConfigured: true,
+    botConfigured: false
+  }
+};
+
 function showPageStatus(message, type = "info") {
   const element = document.getElementById("applications-page-status");
   if (!element) {
@@ -424,6 +434,9 @@ function renderApplicationForms(items) {
     return;
   }
 
+  const permissions = currentApplicationsSession?.session?.permissions || {};
+  const canDelete = Boolean(permissions.applicationCreate && currentApplicationsSession?.config?.storageConfigured);
+
   if (!items.length) {
     list.innerHTML = `
       <article class="empty-card">
@@ -437,24 +450,78 @@ function renderApplicationForms(items) {
   list.innerHTML = items
     .map(
       (item) => `
-        <a class="application-portal-card" href="apply.html?id=${encodeURIComponent(item.id)}" target="_blank" rel="noreferrer">
-          <div class="application-portal-copy">
-            <span class="section-kicker">${escapeHtml(item.department || "Application")}</span>
-            <h3>${escapeHtml(item.title || "Open Application")}</h3>
-            <p>${escapeHtml(item.overview || "Open this application form to read the details and apply.")}</p>
-            <div class="application-meta">
-              <span>Discord login required</span>
-              <span>Published ${escapeHtml(formatDate(item.createdAt))}</span>
+        <article class="application-portal-shell">
+          <a class="application-portal-card" href="apply.html?id=${encodeURIComponent(item.id)}" target="_blank" rel="noreferrer">
+            <div class="application-portal-copy">
+              <span class="section-kicker">${escapeHtml(item.department || "Application")}</span>
+              <h3>${escapeHtml(item.title || "Open Application")}</h3>
+              <p>${escapeHtml(item.overview || "Open this application form to read the details and apply.")}</p>
+              <div class="application-meta">
+                <span>Discord login required</span>
+                <span>Published ${escapeHtml(formatDate(item.createdAt))}</span>
+              </div>
             </div>
-          </div>
-          <div class="application-portal-side">
-            <span class="status-pill status-pill-accepted">Open Form</span>
-            <strong>Open hidden application page</strong>
-          </div>
-        </a>
+            <div class="application-portal-side">
+              <span class="status-pill status-pill-accepted">Open Form</span>
+              <strong>Open hidden application page</strong>
+            </div>
+          </a>
+          ${
+            canDelete
+              ? `
+                <div class="application-portal-actions">
+                  <button class="button button-secondary application-form-delete" data-form-id="${escapeHtml(
+                    item.id
+                  )}" data-form-title="${escapeHtml(item.title || "Application Form")}" type="button">Delete Form</button>
+                </div>
+              `
+              : ""
+          }
+        </article>
       `
     )
     .join("");
+
+  if (!canDelete) {
+    return;
+  }
+
+  list.querySelectorAll(".application-form-delete").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const title = button.dataset.formTitle || "this application form";
+      const id = button.dataset.formId;
+
+      if (!window.confirm(`Delete "${title}"?\n\nExisting submitted applications will stay in the review queue.`)) {
+        return;
+      }
+
+      const originalLabel = button.textContent;
+      button.disabled = true;
+      button.textContent = "Deleting...";
+
+      try {
+        const response = await fetch("/api/application-forms", {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ id })
+        });
+
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(result.error || "Application form could not be deleted.");
+        }
+
+        showPageStatus(result.message || "Application form deleted successfully.", "success");
+        await loadApplicationForms();
+      } catch (error) {
+        showPageStatus(error.message, "error");
+        button.disabled = false;
+        button.textContent = originalLabel;
+      }
+    });
+  });
 }
 
 function renderReviewQueue(items, session) {
@@ -684,15 +751,7 @@ async function loadApplicationsPage() {
     showPageStatus(authMessage[0], authMessage[1]);
   }
 
-  let session = {
-    authenticated: false,
-    session: null,
-    config: {
-      discordConfigured: true,
-      storageConfigured: true,
-      botConfigured: false
-    }
-  };
+  let session = { ...currentApplicationsSession };
 
   try {
     const sessionResponse = await fetch("/api/auth/session", { cache: "no-store" });
@@ -704,6 +763,7 @@ async function loadApplicationsPage() {
     );
   }
 
+  currentApplicationsSession = session;
   renderAuthShell(session);
   await Promise.all([loadApplicationForms(), loadReviewQueue(session)]);
 }

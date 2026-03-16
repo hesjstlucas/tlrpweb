@@ -728,6 +728,11 @@ p {
   grid-template-columns: 1fr;
 }
 
+.application-portal-shell {
+  display: grid;
+  gap: 12px;
+}
+
 .media-card {
   display: grid;
 }
@@ -823,6 +828,11 @@ p {
 .application-portal-side strong {
   font-size: 1.04rem;
   letter-spacing: 0.02em;
+}
+
+.application-portal-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 .application-card {
@@ -1407,6 +1417,10 @@ p {
   .application-portal-side {
     justify-items: start;
     text-align: left;
+  }
+
+  .application-portal-actions {
+    justify-content: flex-start;
   }
 
   .application-card-top {
