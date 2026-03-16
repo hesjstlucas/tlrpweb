@@ -500,16 +500,13 @@ function renderApplicationForms(items) {
       button.textContent = "Deleting...";
 
       try {
-        const response = await fetch("/api/application-forms", {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({ id })
+        const deleteUrl = `/api/application-forms?id=${encodeURIComponent(id)}`;
+        const deleteResponse = await fetch(deleteUrl, {
+          method: "DELETE"
         });
 
-        const result = await response.json();
-        if (!response.ok) {
+        const result = await deleteResponse.json();
+        if (!deleteResponse.ok) {
           throw new Error(result.error || "Application form could not be deleted.");
         }
 

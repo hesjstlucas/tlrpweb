@@ -13,6 +13,14 @@ async function readJsonBody(req) {
     return req.body;
   }
 
+  if (typeof req.body === "string" && req.body.trim()) {
+    return JSON.parse(req.body);
+  }
+
+  if (Buffer.isBuffer(req.body) && req.body.length) {
+    return JSON.parse(req.body.toString("utf8"));
+  }
+
   const chunks = [];
 
   for await (const chunk of req) {
@@ -167,8 +175,9 @@ module.exports = async function handler(req, res) {
 
   if (req.method === "DELETE") {
     try {
-      const body = await readJsonBody(req);
-      const id = String(body.id || "").trim();
+      const queryId = String(req.query?.id || "").trim();
+      const body = queryId ? {} : await readJsonBody(req);
+      const id = String(queryId || body.id || "").trim();
 
       if (!id) {
         sendJson(res, 400, { error: "Application form ID is required." });
