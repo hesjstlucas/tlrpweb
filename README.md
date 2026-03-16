@@ -16,6 +16,7 @@ That script:
 - generates `SESSION_SECRET` for you
 - saves a private local copy to `.env.vercel.local`
 - uploads the values to Vercel through the CLI or `npx vercel`
+- starts a production deploy after the upload finishes
 
 You still need to add the redirect URL it prints into the Discord Developer Portal, because Discord controls that setting on their side.
 

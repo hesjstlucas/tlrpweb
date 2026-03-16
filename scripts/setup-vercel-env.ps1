@@ -1,7 +1,8 @@
 param(
   [string[]]$Targets = @("development", "preview", "production"),
   [switch]$SkipUpload,
-  [switch]$SkipLink
+  [switch]$SkipLink,
+  [switch]$SkipDeploy
 )
 
 Set-StrictMode -Version Latest
@@ -160,8 +161,8 @@ function Ensure-VercelLink {
   }
 
   Write-Host ""
-  Write-Host "This repo is not linked to Vercel yet. Running 'vercel link'..." -ForegroundColor Cyan
-  Invoke-Vercel -Arguments @("link")
+  Write-Host "This repo is not linked to Vercel yet. Running 'vercel link --yes'..." -ForegroundColor Cyan
+  Invoke-Vercel -Arguments @("link", "--yes")
 }
 
 function Upload-VercelVariables {
@@ -178,13 +179,19 @@ function Upload-VercelVariables {
   }
 }
 
+function Deploy-Production {
+  Write-Host ""
+  Write-Host "Deploying the project to production..." -ForegroundColor Cyan
+  Invoke-Vercel -Arguments @("deploy", "--prod", "--yes")
+}
+
 $scriptDirectory = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $scriptDirectory
 Set-Location $repoRoot
 
 Write-Host ""
 Write-Host "TLRP Vercel Discord Setup" -ForegroundColor Cyan
-Write-Host "This will save your values locally and can upload them to Vercel for you." -ForegroundColor DarkGray
+Write-Host "This will save your values locally, upload them to Vercel, and deploy production for you." -ForegroundColor DarkGray
 Write-Host ""
 
 $defaultDomain = Read-PlainValue -Label "Your live domain (example: tlrpweb.vercel.app)" -Required
@@ -244,15 +251,18 @@ if ($SkipUpload) {
   exit 0
 }
 
-$shouldUpload = Confirm-Choice -Message "Upload these values to Vercel now?" -Default $true
-if (-not $shouldUpload) {
-  Write-Host "Upload skipped. You can rerun this script later." -ForegroundColor Yellow
-  exit 0
-}
-
 Ensure-VercelLink -Skip:$SkipLink
 Upload-VercelVariables -Values $values -Environments $Targets
 
 Write-Host ""
 Write-Host "All environment variables were uploaded to Vercel." -ForegroundColor Green
-Write-Host "Redeploy your project so the new values are used." -ForegroundColor Green
+
+if ($SkipDeploy) {
+  Write-Host "Skipped production deploy because -SkipDeploy was used." -ForegroundColor Yellow
+  exit 0
+}
+
+Deploy-Production
+
+Write-Host ""
+Write-Host "Production deploy started with the new environment variables." -ForegroundColor Green
