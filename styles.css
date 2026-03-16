@@ -2,16 +2,14 @@
   --bg: #070b12;
   --bg-soft: #0f1724;
   --panel: rgba(11, 17, 28, 0.88);
-  --panel-soft: rgba(15, 24, 39, 0.92);
   --line: rgba(143, 182, 255, 0.14);
-  --line-strong: rgba(143, 182, 255, 0.28);
   --text: #eef3ff;
   --muted: #98a7c1;
-  --blue: #63b8ff;
-  --blue-strong: #7f9bff;
+  --blue: #7d98d9;
+  --blue-strong: #a8bceb;
   --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
   --font-body: "Aptos", "Trebuchet MS", "Segoe UI", sans-serif;
-  --font-display: "Bahnschrift", "Aptos Display", "Trebuchet MS", sans-serif;
+  --font-display: "Bahnschrift", "Arial Black", "Trebuchet MS", sans-serif;
 }
 
 * {
@@ -26,9 +24,9 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(72, 113, 255, 0.18), transparent 26%),
-    radial-gradient(circle at 82% 18%, rgba(84, 187, 255, 0.14), transparent 18%),
-    linear-gradient(180deg, #060a11 0%, #0b1220 100%);
+    radial-gradient(circle at top left, rgba(72, 113, 255, 0.14), transparent 26%),
+    radial-gradient(circle at 82% 18%, rgba(168, 188, 235, 0.12), transparent 18%),
+    linear-gradient(180deg, #05080e 0%, #0a1020 100%);
   color: var(--text);
   font-family: var(--font-body);
 }
@@ -59,8 +57,8 @@ img {
   position: fixed;
   inset: 0;
   background:
-    radial-gradient(circle at 18% 24%, rgba(127, 155, 255, 0.1), transparent 22%),
-    radial-gradient(circle at 76% 72%, rgba(99, 184, 255, 0.08), transparent 18%);
+    radial-gradient(circle at 18% 24%, rgba(125, 152, 217, 0.1), transparent 22%),
+    radial-gradient(circle at 76% 72%, rgba(168, 188, 235, 0.08), transparent 18%);
   pointer-events: none;
   z-index: -1;
 }
@@ -75,7 +73,7 @@ img {
   top: 0;
   z-index: 10;
   border-bottom: 1px solid rgba(143, 182, 255, 0.08);
-  background: rgba(7, 11, 18, 0.78);
+  background: rgba(5, 8, 14, 0.8);
   backdrop-filter: blur(18px);
 }
 
@@ -88,7 +86,7 @@ img {
 }
 
 .header-row {
-  min-height: 88px;
+  min-height: 92px;
 }
 
 .brand {
@@ -98,26 +96,27 @@ img {
 }
 
 .brand img {
-  width: 54px;
-  filter: drop-shadow(0 10px 24px rgba(47, 95, 225, 0.35));
+  width: 150px;
+  filter: drop-shadow(0 10px 24px rgba(125, 152, 217, 0.25));
 }
 
 .brand-copy {
   display: grid;
-  gap: 2px;
+  gap: 3px;
 }
 
 .brand-copy span {
   color: var(--muted);
-  font-size: 0.72rem;
-  letter-spacing: 0.2em;
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
 }
 
 .brand-copy strong {
   font-family: var(--font-display);
-  font-size: 1.55rem;
+  font-size: 1.05rem;
   letter-spacing: 0.08em;
+  line-height: 1.05;
 }
 
 .site-nav {
@@ -154,15 +153,15 @@ img {
 }
 
 .site-nav a:hover {
-  background: rgba(127, 155, 255, 0.12);
+  background: rgba(125, 152, 217, 0.14);
   color: var(--text);
 }
 
 .header-cta {
   padding: 12px 18px;
-  border: 1px solid rgba(127, 155, 255, 0.24);
+  border: 1px solid rgba(168, 188, 235, 0.26);
   border-radius: 999px;
-  background: linear-gradient(135deg, rgba(127, 155, 255, 0.2), rgba(99, 184, 255, 0.14));
+  background: linear-gradient(135deg, rgba(125, 152, 217, 0.22), rgba(168, 188, 235, 0.16));
   color: var(--text);
   font-weight: 800;
 }
@@ -199,7 +198,7 @@ img {
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: #93c8ff;
+  color: #a8bceb;
   font-size: 0.82rem;
   font-weight: 800;
   letter-spacing: 0.28em;
@@ -210,7 +209,7 @@ img {
   content: "";
   width: 60px;
   height: 2px;
-  background: linear-gradient(90deg, #63b8ff, rgba(99, 184, 255, 0));
+  background: linear-gradient(90deg, var(--blue-strong), rgba(168, 188, 235, 0));
 }
 
 h1,
@@ -267,7 +266,7 @@ p {
 .button-primary {
   background: linear-gradient(135deg, var(--blue), var(--blue-strong));
   color: #06101b;
-  box-shadow: 0 18px 34px rgba(73, 128, 255, 0.28);
+  box-shadow: 0 18px 34px rgba(125, 152, 217, 0.24);
 }
 
 .button-secondary {
@@ -320,8 +319,8 @@ p {
   border-radius: 36px;
   background:
     linear-gradient(180deg, rgba(15, 22, 38, 0.48), rgba(5, 8, 15, 0.9)),
-    radial-gradient(circle at 30% 30%, rgba(127, 155, 255, 0.18), transparent 34%),
-    radial-gradient(circle at 82% 22%, rgba(99, 184, 255, 0.16), transparent 22%),
+    radial-gradient(circle at 30% 30%, rgba(125, 152, 217, 0.18), transparent 34%),
+    radial-gradient(circle at 82% 22%, rgba(168, 188, 235, 0.16), transparent 22%),
     linear-gradient(140deg, rgba(10, 16, 27, 0.95), rgba(5, 8, 15, 0.92));
 }
 
@@ -338,13 +337,13 @@ p {
 .glow-left {
   top: 56px;
   left: 42px;
-  background: rgba(127, 155, 255, 0.24);
+  background: rgba(125, 152, 217, 0.24);
 }
 
 .glow-right {
   right: 36px;
   bottom: 60px;
-  background: rgba(99, 184, 255, 0.18);
+  background: rgba(168, 188, 235, 0.16);
   animation-delay: -3s;
 }
 
@@ -355,7 +354,7 @@ p {
   font-size: clamp(8rem, 16vw, 13rem);
   font-weight: 900;
   line-height: 0.84;
-  color: rgba(246, 250, 255, 0.1);
+  color: rgba(246, 250, 255, 0.08);
   transform: rotate(-8deg);
 }
 
@@ -371,30 +370,31 @@ p {
   top: 34px;
   left: 34px;
   right: 34px;
-  grid-template-columns: 64px minmax(0, 1fr);
-  align-items: center;
+  gap: 18px;
+  align-items: start;
 }
 
 .hero-brand-panel img {
-  width: 64px;
+  width: min(100%, 230px);
 }
 
 .hero-panel strong {
   font-size: 1.15rem;
+  line-height: 1.4;
 }
 
 .hero-panel-right {
   position: absolute;
-  top: 232px;
+  top: 250px;
   right: 28px;
-  max-width: 260px;
+  max-width: 280px;
 }
 
 .hero-panel-left {
   position: absolute;
   left: 28px;
   bottom: 28px;
-  max-width: 260px;
+  max-width: 280px;
 }
 
 .section {
@@ -451,8 +451,8 @@ p {
   width: 52px;
   height: 52px;
   border-radius: 16px;
-  background: linear-gradient(135deg, rgba(99, 184, 255, 0.18), rgba(127, 155, 255, 0.24));
-  color: #d9e7ff;
+  background: linear-gradient(135deg, rgba(125, 152, 217, 0.2), rgba(168, 188, 235, 0.28));
+  color: #eef3ff;
   font-size: 1.2rem;
   font-weight: 800;
 }
@@ -466,7 +466,7 @@ p {
   width: fit-content;
   padding: 10px 16px;
   border-radius: 999px;
-  background: linear-gradient(135deg, rgba(99, 184, 255, 0.16), rgba(127, 155, 255, 0.16));
+  background: linear-gradient(135deg, rgba(125, 152, 217, 0.2), rgba(168, 188, 235, 0.18));
   color: #dfeafe;
   font-size: 1rem;
 }
@@ -479,7 +479,7 @@ p {
   padding: 34px;
   border-radius: 32px;
   background:
-    radial-gradient(circle at 84% 20%, rgba(99, 184, 255, 0.2), transparent 26%),
+    radial-gradient(circle at 84% 20%, rgba(168, 188, 235, 0.18), transparent 26%),
     linear-gradient(135deg, rgba(13, 20, 33, 0.88), rgba(8, 12, 20, 0.96));
 }
 
@@ -557,6 +557,14 @@ p {
     align-items: flex-start;
   }
 
+  .brand {
+    gap: 10px;
+  }
+
+  .brand img {
+    width: 118px;
+  }
+
   .site-nav {
     gap: 4px;
     padding: 6px;
@@ -583,16 +591,15 @@ p {
     left: 18px;
     right: 18px;
     top: 18px;
-    grid-template-columns: 56px minmax(0, 1fr);
     padding: 18px;
   }
 
   .hero-brand-panel img {
-    width: 56px;
+    width: min(100%, 180px);
   }
 
   .hero-panel-right {
-    top: 204px;
+    top: 226px;
     right: 18px;
   }
 
