@@ -8,7 +8,7 @@
       "applicantDiscordId": "1252311238994559004",
       "applicantUsername": "solarxerlol",
       "applicantName": "lucas",
-      "status": "pending",
+      "status": "accepted",
       "createdAt": "2026-03-16T19:17:24.414Z",
       "submittedAt": "2026-03-16T19:17:24.414Z",
       "createdBy": "lucas",
@@ -32,8 +32,8 @@
           "value": "e"
         }
       ],
-      "reviewedAt": null,
-      "reviewedBy": "",
+      "reviewedAt": "2026-03-16T19:17:56.008Z",
+      "reviewedBy": "lucas",
       "decisionNote": ""
     },
     {
