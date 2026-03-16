@@ -68,6 +68,10 @@ img {
   margin: 0 auto;
 }
 
+.site-header .container {
+  width: min(1420px, calc(100% - 28px));
+}
+
 .site-header {
   position: sticky;
   top: 0;
@@ -127,8 +131,8 @@ img {
 .site-nav {
   display: flex;
   align-items: center;
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: 1 0 auto;
+  min-width: max-content;
   flex-wrap: nowrap;
   gap: 10px;
   padding: 8px;
