@@ -1,3 +1,36 @@
 {
-  "items": []
+  "items": [
+    {
+      "id": "fba27fc6-2aaa-4c20-b381-0b30952440c0",
+      "title": "Idk",
+      "department": "idk",
+      "overview": "idk",
+      "intro": "idk",
+      "questions": [
+        {
+          "id": "fd6101ba-f46a-4c57-b9b2-ab354c5bcfdf",
+          "label": "Why do you want this position?",
+          "placeholder": "Tell staff why you want to join this part of TLRP.",
+          "type": "long",
+          "required": true
+        },
+        {
+          "id": "618db49d-51c3-4c1b-880e-f8c20dbd9845",
+          "label": "What is your current availability?",
+          "placeholder": "Example: Weeknights after 6 PM EST and most weekends.",
+          "type": "short",
+          "required": true
+        },
+        {
+          "id": "65274d00-13b4-4236-afb8-19b2b4934123",
+          "label": "What experience should staff know about?",
+          "placeholder": "Roleplay, department, or leadership experience.",
+          "type": "long",
+          "required": true
+        }
+      ],
+      "createdAt": "2026-03-16T22:40:54.507Z",
+      "createdBy": "Joccoli20"
+    }
+  ]
 }
