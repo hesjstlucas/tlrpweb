@@ -18,15 +18,26 @@ function showPageStatus(message, type = "info") {
   element.textContent = message;
 }
 
+function hidePageStatus() {
+  const element = document.getElementById("applications-page-status");
+  if (!element) {
+    return;
+  }
+
+  element.hidden = true;
+  element.textContent = "";
+  element.className = "page-note";
+}
+
 function readAuthMessage() {
   const params = new URLSearchParams(window.location.search);
   const status = params.get("auth");
 
   const messages = {
-    success: ["Discord sign-in successful. Your application permissions are now loaded.", "success"],
-    denied: ["You signed in, but your account does not have application tracker permissions.", "warning"],
-    failed: ["Discord authentication failed. Try again or check your Vercel environment variables.", "error"],
-    misconfigured: ["Application permissions are not configured yet. Add the required Discord variables in Vercel.", "error"],
+    success: ["Discord sign-in successful. Staff permissions are loaded for the application tools.", "success"],
+    denied: ["You signed in successfully, but your Discord roles only allow the public application view on this page.", "warning"],
+    failed: ["Discord authentication failed. Try again or check the website configuration.", "error"],
+    misconfigured: ["Discord authentication is not fully configured yet. Add the required Vercel variables first.", "error"],
     "logged-out": ["You have been signed out of the application tools.", "info"]
   };
 
@@ -41,11 +52,13 @@ function getApplicationsAuthLinks() {
 }
 
 function statusLabel(status) {
-  if (status === "accepted") {
+  const value = String(status || "pending").trim().toLowerCase();
+
+  if (value === "accepted") {
     return "Accepted";
   }
 
-  if (status === "denied") {
+  if (value === "denied") {
     return "Denied";
   }
 
@@ -58,7 +71,106 @@ function formatDate(value) {
   }
 
   const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? "Unknown date" : parsed.toLocaleDateString();
+  return Number.isNaN(parsed.getTime()) ? "Unknown date" : parsed.toLocaleString();
+}
+
+function createQuestionId() {
+  if (window.crypto && typeof window.crypto.randomUUID === "function") {
+    return window.crypto.randomUUID();
+  }
+
+  return `question-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function getDefaultQuestions() {
+  return [
+    {
+      label: "Why do you want this position?",
+      placeholder: "Tell staff why you want to join this part of TLRP.",
+      type: "long",
+      required: true
+    },
+    {
+      label: "What is your current availability?",
+      placeholder: "Example: Weeknights after 6 PM EST and most weekends.",
+      type: "short",
+      required: true
+    },
+    {
+      label: "What experience should staff know about?",
+      placeholder: "Roleplay, department, or leadership experience.",
+      type: "long",
+      required: true
+    }
+  ];
+}
+
+function createQuestionEditor(question = {}) {
+  const wrapper = document.createElement("article");
+  wrapper.className = "question-editor";
+  wrapper.dataset.questionId = question.id || createQuestionId();
+
+  wrapper.innerHTML = `
+    <div class="question-editor-top">
+      <strong>Application question</strong>
+      <button class="button button-secondary builder-remove-question" type="button">Remove</button>
+    </div>
+    <div class="question-editor-grid">
+      <label>
+        <span>Prompt</span>
+        <input maxlength="100" name="label" placeholder="Example: Why should we choose you?" type="text" value="${escapeHtml(
+          question.label || ""
+        )}" />
+      </label>
+      <label>
+        <span>Placeholder</span>
+        <input maxlength="140" name="placeholder" placeholder="Optional helper text for players." type="text" value="${escapeHtml(
+          question.placeholder || ""
+        )}" />
+      </label>
+      <label>
+        <span>Answer type</span>
+        <select name="type">
+          <option value="short"${question.type === "long" ? "" : " selected"}>Short answer</option>
+          <option value="long"${question.type === "long" ? " selected" : ""}>Paragraph</option>
+        </select>
+      </label>
+    </div>
+    <label class="checkbox-row">
+      <input name="required" type="checkbox"${question.required === false ? "" : " checked"} />
+      <span>Require an answer before the player can submit.</span>
+    </label>
+  `;
+
+  wrapper.querySelector(".builder-remove-question").addEventListener("click", () => {
+    const container = wrapper.parentElement;
+    if (container && container.children.length <= 1) {
+      showPageStatus("Each application form needs at least one question.", "warning");
+      return;
+    }
+
+    wrapper.remove();
+  });
+
+  return wrapper;
+}
+
+function collectQuestions(container) {
+  return [...container.querySelectorAll(".question-editor")].map((element) => ({
+    id: element.dataset.questionId || createQuestionId(),
+    label: element.querySelector('[name="label"]').value.trim(),
+    placeholder: element.querySelector('[name="placeholder"]').value.trim(),
+    type: element.querySelector('[name="type"]').value,
+    required: element.querySelector('[name="required"]').checked
+  }));
+}
+
+function renderQuestionEditors(container, questions = []) {
+  container.innerHTML = "";
+  const source = questions.length ? questions : getDefaultQuestions();
+  source.forEach((question) => {
+    container.appendChild(createQuestionEditor(question));
+  });
 }
 
 function renderAuthShell(session) {
@@ -83,8 +195,8 @@ function renderAuthShell(session) {
           <span class="section-kicker">Application permissions</span>
           <h2>Discord application access is not configured yet.</h2>
           <p>
-            Add the Discord OAuth variables, a strong SESSION_SECRET, your guild ID, and the Directive+ plus
-            Management+ role IDs in Vercel before staff sign-in can be enabled here.
+            Add the Discord OAuth values, guild ID, Directive+ role IDs, and Management+ role IDs before the staff-side
+            application tools can be used here.
           </p>
         </div>
       `;
@@ -94,10 +206,10 @@ function renderAuthShell(session) {
     shell.innerHTML = `
       <div class="admin-card-copy">
         <span class="section-kicker">Application permissions</span>
-        <h2>Sign in with Discord to use the application tools.</h2>
+        <h2>Sign in with Discord to build forms or review submissions.</h2>
         <p>
-          Directive+ can publish the large public application buttons. Management+ can still review tracker records
-          below.
+          Directive+ creates the public forms. Management+ reads the submitted applications and updates the final
+          status.
         </p>
       </div>
       <div class="admin-card-actions">
@@ -111,10 +223,10 @@ function renderAuthShell(session) {
     shell.innerHTML = `
       <div class="admin-card-copy">
         <span class="section-kicker">Application permissions</span>
-        <h2>The tracker roles are not configured yet.</h2>
+        <h2>The application roles are not configured yet.</h2>
         <p>
-          Add your Directive+ and Management+ role IDs, or use the owner ID override, before this page can hand out
-          application permissions through Discord.
+          Add the Directive+ and Management+ role IDs, or use the owner ID override, before the staff tools can unlock
+          here.
         </p>
       </div>
       <div class="admin-card-actions">
@@ -130,8 +242,8 @@ function renderAuthShell(session) {
         <span class="section-kicker">Signed in</span>
         <h2>${escapeHtml(session.session.displayName || session.session.username || "Discord user")}</h2>
         <p>
-          Your account is signed in, but it does not match the configured Directive+ or Management+ role IDs, so this
-          page stays view-only for you.
+          Your account is logged in, but it does not match the configured Directive+ or Management+ roles, so this page
+          stays public-view only for you.
         </p>
       </div>
       <div class="admin-card-actions">
@@ -142,26 +254,29 @@ function renderAuthShell(session) {
   }
 
   const permissionChips = [
-    canCreate ? '<span class="permission-chip">Directive+ Publish Access</span>' : "",
-    canManage ? '<span class="permission-chip">Management+ Review Access</span>' : "",
-    !config.storageConfigured ? '<span class="permission-chip permission-chip-warning">Storage Not Ready</span>' : ""
+    canCreate ? '<span class="permission-chip">Directive+ Form Builder</span>' : "",
+    canManage ? '<span class="permission-chip">Management+ Review Queue</span>' : "",
+    !config.storageConfigured ? '<span class="permission-chip permission-chip-warning">Storage Not Ready</span>' : "",
+    !config.botConfigured && canManage
+      ? '<span class="permission-chip permission-chip-warning">DM Token Missing</span>'
+      : ""
   ]
     .filter(Boolean)
     .join("");
 
-  const publishSection = canCreate
+  const builderSection = canCreate
     ? `
       <section class="admin-subsection">
         <div class="admin-subsection-copy">
-          <h3>Publish a public application button</h3>
+          <h3>Create a new application form</h3>
           <p>
-            Create a large application card for players to click. It will appear in the Current Applications section
-            above and open its own page on TLRPX in a new tab.
+            Build the player-facing application here. Once you publish it, the site creates a large public application
+            button that opens the hidden form page in a new tab.
           </p>
         </div>
-        <form class="media-form" id="application-post-form">
+        <form class="media-form" id="application-builder-form">
           <label>
-            <span>Application title</span>
+            <span>Form title</span>
             <input maxlength="90" name="title" placeholder="Law Enforcement Application" required type="text" />
           </label>
           <label>
@@ -169,83 +284,59 @@ function renderAuthShell(session) {
             <input maxlength="60" name="department" placeholder="Law Enforcement" required type="text" />
           </label>
           <label class="media-form-full">
-            <span>Short overview</span>
-            <textarea maxlength="240" name="overview" placeholder="Short text for the big button players see on the applications page." required></textarea>
+            <span>Button overview</span>
+            <textarea maxlength="240" name="overview" placeholder="This short text appears on the big public application button." required></textarea>
           </label>
           <label class="media-form-full">
-            <span>Full details</span>
-            <textarea maxlength="2500" name="details" placeholder="Full application page details, requirements, expectations, and how the process works." required></textarea>
+            <span>Form intro</span>
+            <textarea maxlength="1800" name="intro" placeholder="Explain requirements, expectations, activity, interview info, or anything else players should read before applying." required></textarea>
           </label>
-          <label class="media-form-full">
-            <span>Apply link</span>
-            <input name="applyLink" placeholder="https://discord.gg/... or https://forms.google.com/..." type="url" />
-          </label>
-          <div class="admin-card-actions media-form-full">
-            <button class="button button-primary" type="submit"${config.storageConfigured ? "" : " disabled"}>Publish Application Button</button>
+          <div class="media-form-full builder-panel">
+            <div class="builder-toolbar">
+              <div class="admin-subsection-copy">
+                <h3>Form questions</h3>
+                <p>Create the questions players must answer before they submit.</p>
+              </div>
+              <button class="button button-secondary" id="application-builder-add-question" type="button">Add Question</button>
+            </div>
+            <div class="builder-questions" id="application-builder-questions"></div>
           </div>
-          <p class="muted-text media-form-full" id="application-post-status"></p>
+          <div class="admin-card-actions media-form-full">
+            <button class="button button-primary" type="submit"${config.storageConfigured ? "" : " disabled"}>Publish Application Form</button>
+          </div>
+          <p class="muted-text media-form-full" id="application-builder-status"></p>
         </form>
       </section>
     `
     : "";
 
-  const trackerSection = canCreate
+  const manageSection = canManage
     ? `
       <section class="admin-subsection">
         <div class="admin-subsection-copy">
-          <h3>Create a staff tracker record</h3>
+          <h3>Management review access</h3>
           <p>
-            Use this to log incoming applications for the internal review list below, separate from the public
-            application buttons.
+            Scroll down to the private review queue to read submitted forms, leave a staff note, and set the final
+            status to accepted, denied, or pending.
           </p>
         </div>
-        <form class="media-form" id="applications-form">
-          <label>
-            <span>Applicant name</span>
-            <input maxlength="80" name="applicantName" placeholder="Lucas" required type="text" />
-          </label>
-          <label>
-            <span>Discord username or ID</span>
-            <input maxlength="80" name="applicantDiscord" placeholder="@hesjstlucas or 1234567890" required type="text" />
-          </label>
-          <label>
-            <span>Department</span>
-            <input maxlength="60" name="department" placeholder="Law Enforcement" required type="text" />
-          </label>
-          <label>
-            <span>Position</span>
-            <input maxlength="70" name="position" placeholder="Deputy" required type="text" />
-          </label>
-          <label class="media-form-full">
-            <span>Reference link</span>
-            <input name="referenceLink" placeholder="https://forms.google.com/... or ticket link" type="url" />
-          </label>
-          <label class="media-form-full">
-            <span>Summary</span>
-            <textarea maxlength="600" name="summary" placeholder="Quick summary of the application and anything staff should know." required></textarea>
-          </label>
-          <div class="admin-card-actions media-form-full">
-            <button class="button button-secondary" type="submit"${config.storageConfigured ? "" : " disabled"}>Create Tracker Record</button>
-          </div>
-          <p class="muted-text media-form-full" id="applications-form-status"></p>
-        </form>
       </section>
     `
     : "";
 
   shell.innerHTML = `
     <div class="admin-card-copy">
-      <span class="section-kicker">Application access</span>
-      <h2>Publish public buttons and manage the staff-side review flow.</h2>
+      <span class="section-kicker">Application staff access</span>
+      <h2>Build forms for players and manage the review queue from one place.</h2>
       <p>
-        Signed in as ${escapeHtml(session.session.displayName || session.session.username || "Authorized user")}. Use
-        the public button publisher for players and the tracker below for internal review.
+        Signed in as ${escapeHtml(session.session.displayName || session.session.username || "Authorized user")}. Public
+        forms go to the player section below, while submitted applications stay in the private management queue.
       </p>
       <div class="permissions-row">${permissionChips}</div>
     </div>
     <div class="admin-card-stack">
-      ${publishSection}
-      ${trackerSection}
+      ${builderSection}
+      ${manageSection}
     </div>
     <div class="admin-card-actions">
       <a class="button button-secondary" href="${links.logout}">Log out</a>
@@ -260,90 +351,74 @@ function renderAuthShell(session) {
     return;
   }
 
-  const postForm = document.getElementById("application-post-form");
-  if (postForm) {
-    const postStatus = document.getElementById("application-post-status");
-    postForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      postStatus.textContent = "Publishing application page...";
-
-      const formData = new FormData(postForm);
-      const payload = {
-        title: formData.get("title"),
-        department: formData.get("department"),
-        overview: formData.get("overview"),
-        details: formData.get("details"),
-        applyLink: formData.get("applyLink")
-      };
-
-      try {
-        const response = await fetch("/api/application-posts", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        });
-
-        const result = await response.json();
-        if (!response.ok) {
-          throw new Error(result.error || "Application page could not be published.");
-        }
-
-        postForm.reset();
-        postStatus.textContent = "Application page published. Refreshing buttons...";
-        await loadApplicationPortals();
-        postStatus.textContent = "Application page published successfully.";
-      } catch (error) {
-        postStatus.textContent = error.message;
-      }
-    });
+  if (!config.botConfigured && canManage) {
+    showPageStatus(
+      "Management review works, but Discord applicant DMs will not send until DISCORD_BOT_TOKEN is added in Vercel.",
+      "warning"
+    );
   }
 
-  const trackerForm = document.getElementById("applications-form");
-  if (trackerForm) {
-    const trackerStatus = document.getElementById("applications-form-status");
-
-    trackerForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      trackerStatus.textContent = "Creating application record...";
-
-      const formData = new FormData(trackerForm);
-      const payload = {
-        applicantName: formData.get("applicantName"),
-        applicantDiscord: formData.get("applicantDiscord"),
-        department: formData.get("department"),
-        position: formData.get("position"),
-        referenceLink: formData.get("referenceLink"),
-        summary: formData.get("summary")
-      };
-
-      try {
-        const response = await fetch("/api/applications", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(payload)
-        });
-
-        const result = await response.json();
-        if (!response.ok) {
-          throw new Error(result.error || "Application record could not be created.");
-        }
-
-        trackerForm.reset();
-        trackerStatus.textContent = "Tracker record created. Refreshing tracker...";
-        await loadApplications(session);
-        trackerStatus.textContent = "Tracker record created successfully.";
-      } catch (error) {
-        trackerStatus.textContent = error.message;
-      }
-    });
+  if (!canCreate) {
+    return;
   }
+
+  const builderForm = document.getElementById("application-builder-form");
+  const questionContainer = document.getElementById("application-builder-questions");
+  const addQuestionButton = document.getElementById("application-builder-add-question");
+  const builderStatus = document.getElementById("application-builder-status");
+
+  renderQuestionEditors(questionContainer);
+
+  addQuestionButton.addEventListener("click", () => {
+    questionContainer.appendChild(createQuestionEditor({ required: true }));
+  });
+
+  builderForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    builderStatus.textContent = "Publishing application form...";
+
+    const formData = new FormData(builderForm);
+    const questions = collectQuestions(questionContainer);
+
+    if (!questions.length) {
+      builderStatus.textContent = "Add at least one question before publishing.";
+      return;
+    }
+
+    const payload = {
+      title: formData.get("title"),
+      department: formData.get("department"),
+      overview: formData.get("overview"),
+      intro: formData.get("intro"),
+      questions
+    };
+
+    try {
+      const response = await fetch("/api/application-forms", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "Application form could not be published.");
+      }
+
+      builderForm.reset();
+      renderQuestionEditors(questionContainer);
+      builderStatus.textContent = "Application form published. Refreshing public buttons...";
+      await loadApplicationForms();
+      builderStatus.textContent = "Application form published successfully.";
+    } catch (error) {
+      builderStatus.textContent = error.message;
+    }
+  });
 }
 
-function renderApplicationPortals(items) {
+function renderApplicationForms(items) {
   const list = document.getElementById("application-portals-list");
   if (!list) {
     return;
@@ -352,8 +427,8 @@ function renderApplicationPortals(items) {
   if (!items.length) {
     list.innerHTML = `
       <article class="empty-card">
-        <h3>No public applications posted yet.</h3>
-        <p>Directive+ can publish the first large application button from the staff tools above.</p>
+        <h3>No live applications yet.</h3>
+        <p>Directive+ can publish the first player-facing application form from the staff tools above.</p>
       </article>
     `;
     return;
@@ -362,19 +437,19 @@ function renderApplicationPortals(items) {
   list.innerHTML = items
     .map(
       (item) => `
-        <a class="application-portal-card" href="application-detail.html?id=${encodeURIComponent(item.id)}" target="_blank" rel="noreferrer">
+        <a class="application-portal-card" href="apply.html?id=${encodeURIComponent(item.id)}" target="_blank" rel="noreferrer">
           <div class="application-portal-copy">
             <span class="section-kicker">${escapeHtml(item.department || "Application")}</span>
             <h3>${escapeHtml(item.title || "Open Application")}</h3>
-            <p>${escapeHtml(item.overview || "Open this application page to read the full details.")}</p>
+            <p>${escapeHtml(item.overview || "Open this application form to read the details and apply.")}</p>
             <div class="application-meta">
-              <span>Published by ${escapeHtml(item.createdBy || "Directive")}</span>
-              <span>${escapeHtml(formatDate(item.createdAt))}</span>
+              <span>Discord login required</span>
+              <span>Published ${escapeHtml(formatDate(item.createdAt))}</span>
             </div>
           </div>
           <div class="application-portal-side">
-            <span class="status-pill status-pill-accepted">Open Application</span>
-            <strong>Open in new tab</strong>
+            <span class="status-pill status-pill-accepted">Open Form</span>
+            <strong>Open hidden application page</strong>
           </div>
         </a>
       `
@@ -382,99 +457,125 @@ function renderApplicationPortals(items) {
     .join("");
 }
 
-function renderApplications(items, session) {
+function renderReviewQueue(items, session) {
   const list = document.getElementById("applications-list");
   if (!list) {
     return;
   }
 
+  const links = getApplicationsAuthLinks();
   const permissions = session?.session?.permissions || {};
   const canManage = Boolean(permissions.applicationManage && session?.config?.storageConfigured);
+
+  if (!session?.authenticated) {
+    list.innerHTML = `
+      <article class="empty-card locked-card">
+        <h3>Management queue locked.</h3>
+        <p>Management+ needs to sign in with Discord before the submitted applications can be reviewed here.</p>
+        <div class="admin-card-actions">
+          <a class="button button-primary" href="${links.login}">Sign in with Discord</a>
+        </div>
+      </article>
+    `;
+    return;
+  }
+
+  if (!canManage) {
+    list.innerHTML = `
+      <article class="empty-card locked-card">
+        <h3>Management+ only.</h3>
+        <p>Your account is signed in, but it does not have the Management+ role needed to open the private application queue.</p>
+      </article>
+    `;
+    return;
+  }
 
   if (!items.length) {
     list.innerHTML = `
       <article class="empty-card">
-        <h3>No tracker records yet.</h3>
-        <p>Directive+ can create the first internal tracker record from the staff tools above.</p>
+        <h3>No submitted applications yet.</h3>
+        <p>Player submissions will show up here once someone fills out one of the live application forms.</p>
       </article>
     `;
     return;
   }
 
   list.innerHTML = items
-    .map(
-      (item) => `
+    .map((item) => {
+      const formTitle = item.formTitle || item.position || item.department || "Application";
+      const applicantName = item.applicantName || item.createdBy || "Applicant";
+      const applicantUsername = item.applicantUsername || item.applicantDiscord || "Unknown Discord";
+      const submittedAt = item.submittedAt || item.createdAt;
+      const answerList =
+        Array.isArray(item.answers) && item.answers.length
+          ? item.answers
+              .map(
+                (answer) => `
+                  <article class="application-answer-item">
+                    <strong>${escapeHtml(answer.label || "Question")}</strong>
+                    <p>${escapeHtml(answer.value || "No answer provided.")}</p>
+                  </article>
+                `
+              )
+              .join("")
+          : `
+              <article class="application-answer-item">
+                <strong>Legacy submission</strong>
+                <p>${escapeHtml(item.summary || "This record was created before the form builder workflow.")}</p>
+              </article>
+            `;
+
+      return `
         <article class="application-card" data-application-id="${escapeHtml(item.id)}">
           <div class="application-card-top">
             <div>
-              <span class="mini-label">Tracker Record</span>
-              <h3>${escapeHtml(item.applicantName)}</h3>
+              <span class="mini-label">Submitted application</span>
+              <h3>${escapeHtml(formTitle)}</h3>
             </div>
-            <span class="status-pill status-pill-${escapeHtml(item.status || "pending")}">${escapeHtml(
+            <span class="status-pill status-pill-${escapeHtml(normalizeStatus(item.status))}">${escapeHtml(
               statusLabel(item.status)
             )}</span>
           </div>
           <div class="application-meta">
             <span>${escapeHtml(item.department || "Department pending")}</span>
-            <span>${escapeHtml(item.position || "Position pending")}</span>
-            <span>${escapeHtml(item.applicantDiscord || "Discord unknown")}</span>
+            <span>${escapeHtml(applicantName)}</span>
+            <span>${escapeHtml(applicantUsername)}</span>
+            <span>${escapeHtml(formatDate(submittedAt))}</span>
           </div>
-          <p>${escapeHtml(item.summary || "No summary provided.")}</p>
-          <div class="application-meta">
-            <span>Created by ${escapeHtml(item.createdBy || "Staff")}</span>
-            <span>${escapeHtml(formatDate(item.createdAt))}</span>
+          <div class="application-answer-list">
+            ${answerList}
           </div>
-          ${
-            item.referenceLink
-              ? `<a class="inline-link" href="${escapeHtml(item.referenceLink)}" target="_blank" rel="noreferrer">Open reference link</a>`
-              : ""
-          }
           ${
             item.reviewedBy || item.decisionNote
               ? `
                 <div class="application-decision">
-                  <strong>Review</strong>
-                  <p>${
-                    item.decisionNote
-                      ? escapeHtml(item.decisionNote)
-                      : `Reviewed by ${escapeHtml(item.reviewedBy || "Management")} on ${escapeHtml(formatDate(item.reviewedAt))}.`
-                  }</p>
-                  ${
-                    item.reviewedBy
-                      ? `<span class="muted-text">Reviewed by ${escapeHtml(item.reviewedBy)} on ${escapeHtml(
-                          formatDate(item.reviewedAt)
-                        )}</span>`
-                      : ""
-                  }
+                  <strong>Latest review</strong>
+                  <p>${escapeHtml(item.decisionNote || `${statusLabel(item.status)} by ${item.reviewedBy || "Management"}.`)}</p>
+                  <span class="muted-text">Updated ${escapeHtml(formatDate(item.reviewedAt))} by ${escapeHtml(
+                    item.reviewedBy || "Management"
+                  )}</span>
                 </div>
               `
               : ""
           }
-          ${
-            canManage && item.status === "pending"
-              ? `
-                <div class="application-review">
-                  <label>
-                    <span>Decision note</span>
-                    <textarea class="application-review-note" maxlength="300" placeholder="Optional note for the final decision."></textarea>
-                  </label>
-                  <div class="admin-card-actions">
-                    <button class="button button-primary application-action" data-action="accepted" type="button">Accept</button>
-                    <button class="button button-secondary application-action" data-action="denied" type="button">Deny</button>
-                  </div>
-                  <p class="muted-text application-review-status"></p>
-                </div>
-              `
-              : ""
-          }
+          <div class="application-review">
+            <label>
+              <span>Decision note</span>
+              <textarea class="application-review-note" maxlength="300" placeholder="Optional note that will be saved and sent in the applicant's DM.">${escapeHtml(
+                item.decisionNote || ""
+              )}</textarea>
+            </label>
+            <div class="admin-card-actions">
+              <button class="button button-secondary application-action" data-action="pending" type="button">Pending</button>
+              <button class="button button-primary application-action" data-action="accepted" type="button">Accept</button>
+              <button class="button button-secondary application-action" data-action="denied" type="button">Deny</button>
+            </div>
+            <p class="muted-text application-review-status"></p>
+          </div>
         </article>
-      `
-    )
+      `;
+    })
     .join("");
-
-  if (!canManage) {
-    return;
-  }
 
   list.querySelectorAll(".application-action").forEach((button) => {
     button.addEventListener("click", async () => {
@@ -482,9 +583,9 @@ function renderApplications(items, session) {
       const noteField = card.querySelector(".application-review-note");
       const statusField = card.querySelector(".application-review-status");
       const id = card.dataset.applicationId;
-      const status = button.dataset.action;
+      const nextStatus = button.dataset.action;
 
-      statusField.textContent = `${status === "accepted" ? "Accepting" : "Denying"} application...`;
+      statusField.textContent = `Saving ${statusLabel(nextStatus).toLowerCase()} decision...`;
 
       try {
         const response = await fetch("/api/applications", {
@@ -494,19 +595,22 @@ function renderApplications(items, session) {
           },
           body: JSON.stringify({
             id,
-            status,
+            status: nextStatus,
             decisionNote: noteField ? noteField.value : ""
           })
         });
 
         const result = await response.json();
-
         if (!response.ok) {
           throw new Error(result.error || "Application decision could not be saved.");
         }
 
-        statusField.textContent = "Decision saved. Refreshing tracker...";
-        await loadApplications(session);
+        if (result.warning) {
+          showPageStatus(result.warning, "warning");
+        }
+
+        statusField.textContent = "Decision saved. Refreshing review queue...";
+        await loadReviewQueue(session);
       } catch (error) {
         statusField.textContent = error.message;
       }
@@ -514,48 +618,60 @@ function renderApplications(items, session) {
   });
 }
 
-async function loadApplicationPortals() {
+function normalizeStatus(value) {
+  const status = String(value || "pending").trim().toLowerCase();
+  return ["accepted", "denied", "pending"].includes(status) ? status : "pending";
+}
+
+async function loadApplicationForms() {
   const list = document.getElementById("application-portals-list");
   if (!list) {
     return;
   }
 
   try {
-    const response = await fetch("/api/application-posts", { cache: "no-store" });
+    const response = await fetch("/api/application-forms", { cache: "no-store" });
     if (!response.ok) {
-      throw new Error("Failed to load application pages.");
+      throw new Error("Failed to load application forms.");
     }
 
     const payload = await response.json();
-    renderApplicationPortals(Array.isArray(payload.items) ? payload.items : []);
+    renderApplicationForms(Array.isArray(payload.items) ? payload.items : []);
   } catch (error) {
     list.innerHTML = `
       <article class="empty-card">
-        <h3>Unable to load public applications.</h3>
+        <h3>Unable to load application forms.</h3>
         <p>${escapeHtml(error.message)}</p>
       </article>
     `;
   }
 }
 
-async function loadApplications(session) {
+async function loadReviewQueue(session) {
   const list = document.getElementById("applications-list");
   if (!list) {
     return;
   }
 
+  const permissions = session?.session?.permissions || {};
+  if (!session?.authenticated || !permissions.applicationManage) {
+    renderReviewQueue([], session);
+    return;
+  }
+
   try {
     const response = await fetch("/api/applications", { cache: "no-store" });
+    const payload = await response.json();
+
     if (!response.ok) {
-      throw new Error("Failed to load applications.");
+      throw new Error(payload.error || "Failed to load application submissions.");
     }
 
-    const payload = await response.json();
-    renderApplications(Array.isArray(payload.items) ? payload.items : [], session);
+    renderReviewQueue(Array.isArray(payload.items) ? payload.items : [], session);
   } catch (error) {
     list.innerHTML = `
       <article class="empty-card">
-        <h3>Unable to load applications.</h3>
+        <h3>Unable to load the management queue.</h3>
         <p>${escapeHtml(error.message)}</p>
       </article>
     `;
@@ -573,20 +689,23 @@ async function loadApplicationsPage() {
     session: null,
     config: {
       discordConfigured: true,
-      storageConfigured: true
+      storageConfigured: true,
+      botConfigured: false
     }
   };
 
   try {
     const sessionResponse = await fetch("/api/auth/session", { cache: "no-store" });
     session = await sessionResponse.json();
-    renderAuthShell(session);
   } catch {
-    showPageStatus("Discord permissions could not be checked right now. The public application pages are still available below.", "warning");
-    renderAuthShell(session);
+    showPageStatus(
+      "Discord permissions could not be checked right now. Public application buttons are still available below.",
+      "warning"
+    );
   }
 
-  await Promise.all([loadApplicationPortals(), loadApplications(session)]);
+  renderAuthShell(session);
+  await Promise.all([loadApplicationForms(), loadReviewQueue(session)]);
 }
 
 document.addEventListener("DOMContentLoaded", loadApplicationsPage);

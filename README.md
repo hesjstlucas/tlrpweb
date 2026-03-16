@@ -25,26 +25,37 @@ You still need to add the redirect URL it prints into the Discord Developer Port
 - `index.html` is the homepage.
 - `rules.html` contains the server rules.
 - `departments.html` contains the departments page.
-- `applications.html` contains the application tracker.
+- `applications.html` contains the public application buttons plus the staff-side form builder and review queue.
+- `apply.html` is the hidden player-facing form page that opens from the application buttons and is not linked in the main nav.
 - `chain-of-command.html` shows the leadership structure.
 - `media.html` shows the public media gallery and the Discord-gated publishing tools.
 
 ## Data files
 
-- `data/applications.json` stores the application tracker entries.
+- `data/application-forms.json` stores the live player-facing application forms built by Directive+.
+- `data/applications.json` stores submitted player applications and management review decisions.
 - `data/chain-of-command.json` powers the chain-of-command page.
 - `data/media.json` stores media gallery entries.
 
 ## Application tracker access
 
-The application tracker is public to view, but staff actions are role-gated.
+The public application buttons are visible to everyone, but building forms and reviewing submissions are role-gated.
 
 Allowed actions are:
 
-- `DISCORD_APPLICATION_CREATOR_ROLE_ID` for Directive+ users who should create application records
-- `DISCORD_APPLICATION_MANAGER_ROLE_ID` for Management+ users who should accept or deny records
+- `DISCORD_APPLICATION_CREATOR_ROLE_ID` for Directive+ users who should create application forms
+- `DISCORD_APPLICATION_MANAGER_ROLE_ID` for Management+ users who should review submitted applications
 
 Each value can be a single role ID or a comma-separated list if you want multiple roles to count.
+
+Workflow:
+
+1. Directive+ creates a form on `applications.html`.
+2. The site turns that into a large public application button.
+3. Players click the button and open `apply.html?id=...` in a new tab.
+4. Players must sign in with Discord before they can submit.
+5. Management+ reviews submissions on `applications.html`.
+6. Accepted, denied, or pending updates can send a Discord DM to the applicant if `DISCORD_BOT_TOKEN` is configured.
 
 ## Chain of command editing
 
@@ -76,9 +87,12 @@ On Vercel, new media items are written back into `data/media.json` through the G
 - `DISCORD_CLIENT_ID`
 - `DISCORD_CLIENT_SECRET`
 - `DISCORD_REDIRECT_URI`
+- `DISCORD_BOT_TOKEN`
 - `SESSION_SECRET`
 
 `SESSION_SECRET` should be a strong random string with at least 16 characters.
+
+`DISCORD_BOT_TOKEN` is required if you want accept, deny, and pending decisions to DM the applicant automatically.
 
 ### Access control
 

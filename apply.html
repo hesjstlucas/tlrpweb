@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Tallahassee City Roleplay | Application</title>
+    <title>Tallahassee City Roleplay | Apply</title>
     <meta
       name="description"
-      content="View the details for a Tallahassee City Roleplay application page."
+      content="Fill out a Tallahassee City Roleplay application after signing in with Discord."
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -27,7 +27,7 @@
           <a href="index.html">Home</a>
           <a href="rules.html">Rules</a>
           <a href="departments.html">Departments</a>
-          <a class="active" href="applications.html">Applications</a>
+          <a href="applications.html">Applications</a>
           <a href="chain-of-command.html">Chain of Command</a>
           <a href="media.html">Media</a>
           <a href="discord.html">Discord</a>
@@ -40,8 +40,13 @@
     <main>
       <section class="page-hero">
         <div class="container">
-          <div class="page-note" id="application-detail-status">Loading application page...</div>
-          <div class="detail-page-shell" id="application-detail-shell"></div>
+          <div class="page-note" id="apply-page-status" hidden></div>
+          <div class="detail-page-shell" id="apply-shell">
+            <article class="empty-card">
+              <h3>Loading application form...</h3>
+              <p>The hidden application page is getting ready.</p>
+            </article>
+          </div>
         </div>
       </section>
     </main>
@@ -59,6 +64,6 @@
       </div>
     </footer>
 
-    <script defer src="application-detail.js"></script>
+    <script defer src="apply.js"></script>
   </body>
 </html>

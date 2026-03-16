@@ -8,6 +8,7 @@ module.exports = async function handler(req, res) {
   const ownerConfigured = Boolean(process.env.DISCORD_OWNER_ID);
   const guildConfigured = Boolean(process.env.DISCORD_GUILD_ID);
   const storageConfigured = hasGithubWriteConfig() || !process.env.VERCEL;
+  const botConfigured = Boolean(process.env.DISCORD_BOT_TOKEN);
   const discordConfigured = Boolean(
     process.env.DISCORD_CLIENT_ID &&
       process.env.DISCORD_CLIENT_SECRET &&
@@ -31,7 +32,8 @@ module.exports = async function handler(req, res) {
         sessionSecretConfigured: hasSessionSecret(),
         mediaRoleConfigured: permissionConfig.mediaRoleConfigured,
         applicationCreatorConfigured: permissionConfig.applicationCreatorConfigured,
-        applicationManagerConfigured: permissionConfig.applicationManagerConfigured
+        applicationManagerConfigured: permissionConfig.applicationManagerConfigured,
+        botConfigured
       }
     })
   );

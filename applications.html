@@ -6,7 +6,7 @@
     <title>Tallahassee City Roleplay | Applications</title>
     <meta
       name="description"
-      content="Open public Tallahassee City Roleplay application pages and manage the staff-side application tracker."
+      content="Open public Tallahassee City Roleplay applications, create Discord-gated form pages, and review submitted applications."
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
@@ -42,17 +42,18 @@
         <div class="container page-hero-grid">
           <div class="page-hero-copy">
             <span class="section-kicker">Applications</span>
-            <h1>Big public application buttons for players, plus staff tools behind the scenes.</h1>
+            <h1>Directive+ builds the forms. Players apply on hidden pages. Management+ reviews everything here.</h1>
             <p>
-              Directive+ can publish application pages that show up as large buttons on this page for every player to
-              click. Each one opens its own page on the TLRPX website in a new tab.
+              Each public application button below opens its own form page in a new tab. Players must sign in with
+              Discord before they can submit, and the management queue on this page handles every accept, deny, or
+              pending decision.
             </p>
           </div>
 
           <div class="page-hero-side">
             <article class="side-panel">
-              <span class="mini-label">Permissions</span>
-              <strong>Directive+ publishes the public application pages. Management+ still handles staff-side review in the tracker below.</strong>
+              <span class="mini-label">Workflow</span>
+              <strong>Publish a form, let players fill it out off-nav, then review submissions here and send Discord DM updates.</strong>
             </article>
           </div>
         </div>
@@ -70,18 +71,18 @@
       <section class="section">
         <div class="container">
           <div class="section-heading">
-            <span class="section-kicker">Current Applications</span>
-            <h2>Large clickable application buttons players can open right away.</h2>
+            <span class="section-kicker">Open Applications</span>
+            <h2>Public buttons players can click to open the live form.</h2>
             <p>
-              Each application card opens a dedicated TLRPX application page in a new tab so players can read the full
-              details before they continue to apply.
+              These are the player-facing application entries. Clicking one opens a hidden application page that is not
+              listed in the main nav bar, and players must sign in with Discord before they can submit.
             </p>
           </div>
 
           <div class="application-portals-grid" id="application-portals-list">
             <article class="empty-card">
-              <h3>Loading application pages...</h3>
-              <p>Once the public application pages are ready, they will appear here as large buttons.</p>
+              <h3>Loading applications...</h3>
+              <p>When Directive+ publishes a form, it will appear here as a large application button.</p>
             </article>
           </div>
         </div>
@@ -90,18 +91,18 @@
       <section class="section">
         <div class="container">
           <div class="section-heading">
-            <span class="section-kicker">Staff Tracker</span>
-            <h2>Keep the internal application review flow organized.</h2>
+            <span class="section-kicker">Management Review</span>
+            <h2>Read player submissions and update the final status.</h2>
             <p>
-              The public buttons above are for players. The tracker below stays focused on staff review, pending
-              decisions, and accepted or denied records.
+              This review queue is private to Management+. Open an application, read the answers, then scroll down to
+              set it to accepted, denied, or pending.
             </p>
           </div>
 
           <div class="applications-grid" id="applications-list">
             <article class="empty-card">
-              <h3>Loading applications...</h3>
-              <p>Once the tracker data is ready, entries will appear here.</p>
+              <h3>Loading review queue...</h3>
+              <p>Management+ submissions will appear here once the queue is ready.</p>
             </article>
           </div>
         </div>

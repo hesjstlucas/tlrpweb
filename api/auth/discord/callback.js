@@ -10,6 +10,10 @@ const {
 const { getPermissionConfig, getPermissionFlags } = require("../../_lib/permissions");
 
 function getAuthStatusForPath(nextPath, permissions) {
+  if (nextPath.startsWith("/apply.html")) {
+    return "success";
+  }
+
   if (nextPath === "/applications.html") {
     return permissions.applicationCreate || permissions.applicationManage ? "success" : "denied";
   }

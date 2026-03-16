@@ -1,24 +1,12 @@
 const crypto = require("crypto");
 const { readSession } = require("./_lib/auth");
+const { sendApplicationStatusDm } = require("./_lib/discord");
 const { getJsonFile, hasGithubWriteConfig, putJsonFile } = require("./_lib/github");
 
 function sendJson(res, statusCode, payload) {
   res.setHeader("Content-Type", "application/json");
   res.statusCode = statusCode;
   res.end(JSON.stringify(payload));
-}
-
-function validateUrl(value) {
-  if (!value) {
-    return true;
-  }
-
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" || url.protocol === "http:";
-  } catch {
-    return false;
-  }
 }
 
 async function readJsonBody(req) {
@@ -39,101 +27,133 @@ async function readJsonBody(req) {
   return JSON.parse(Buffer.concat(chunks).toString("utf8"));
 }
 
+function normalizeStatus(value) {
+  return String(value || "pending").trim().toLowerCase();
+}
+
+function getCreatedTime(item) {
+  return new Date(item.submittedAt || item.createdAt || item.reviewedAt || 0).getTime();
+}
+
 function sortItems(items = []) {
   return [...items].sort((left, right) => {
-    if (left.status === "pending" && right.status !== "pending") {
+    const leftStatus = normalizeStatus(left.status);
+    const rightStatus = normalizeStatus(right.status);
+
+    if (leftStatus === "pending" && rightStatus !== "pending") {
       return -1;
     }
 
-    if (left.status !== "pending" && right.status === "pending") {
+    if (leftStatus !== "pending" && rightStatus === "pending") {
       return 1;
     }
 
-    return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
+    return getCreatedTime(right) - getCreatedTime(left);
   });
 }
 
+function getSubmissionValues(rawAnswers = []) {
+  const values = new Map();
+
+  if (!Array.isArray(rawAnswers)) {
+    return values;
+  }
+
+  rawAnswers.forEach((answer) => {
+    const questionId = String(answer?.questionId || "").trim();
+    if (!questionId) {
+      return;
+    }
+
+    values.set(questionId, String(answer?.value || "").trim());
+  });
+
+  return values;
+}
+
 module.exports = async function handler(req, res) {
+  const session = readSession(req);
+  const permissions = session?.permissions || {};
+
   if (req.method === "GET") {
+    if (!permissions.applicationManage) {
+      sendJson(res, 403, { error: "You are not allowed to view application submissions." });
+      return;
+    }
+
     try {
       const data = await getJsonFile("data/applications.json");
       sendJson(res, 200, {
         items: sortItems(Array.isArray(data.items) ? data.items : [])
       });
     } catch (error) {
-      sendJson(res, 500, { error: error.message });
+      sendJson(res, 500, { error: error.message || "Applications could not be loaded." });
     }
 
     return;
   }
 
-  const session = readSession(req);
-  const permissions = session?.permissions || {};
+  if (process.env.VERCEL && !hasGithubWriteConfig()) {
+    sendJson(res, 503, {
+      error: "Application writes on Vercel require GITHUB_REPOSITORY and GITHUB_TOKEN environment variables."
+    });
+    return;
+  }
 
   if (req.method === "POST") {
-    if (!permissions.applicationCreate) {
-      sendJson(res, 403, { error: "You are not allowed to create application records." });
-      return;
-    }
-
-    if (process.env.VERCEL && !hasGithubWriteConfig()) {
-      sendJson(res, 503, {
-        error: "Application writes on Vercel require GITHUB_REPOSITORY and GITHUB_TOKEN environment variables."
-      });
+    if (!session) {
+      sendJson(res, 401, { error: "You must sign in with Discord before you can apply." });
       return;
     }
 
     try {
       const body = await readJsonBody(req);
-      const applicantName = String(body.applicantName || "").trim();
-      const applicantDiscord = String(body.applicantDiscord || "").trim();
-      const department = String(body.department || "").trim();
-      const position = String(body.position || "").trim();
-      const referenceLink = String(body.referenceLink || "").trim();
-      const summary = String(body.summary || "").trim();
+      const formId = String(body.formId || "").trim();
+      const formsData = await getJsonFile("data/application-forms.json");
+      const forms = Array.isArray(formsData.items) ? formsData.items : [];
+      const form = forms.find((entry) => entry.id === formId);
 
-      if (!applicantName || applicantName.length > 80) {
-        sendJson(res, 400, { error: "Applicant name is required and must stay under 80 characters." });
+      if (!form) {
+        sendJson(res, 404, { error: "This application form could not be found." });
         return;
       }
 
-      if (!applicantDiscord || applicantDiscord.length > 80) {
-        sendJson(res, 400, { error: "Discord username or ID is required and must stay under 80 characters." });
-        return;
-      }
+      const answersByQuestion = getSubmissionValues(body.answers);
+      const answers = (Array.isArray(form.questions) ? form.questions : []).map((question) => {
+        const value = answersByQuestion.get(question.id) || "";
+        const limit = question.type === "long" ? 1500 : 300;
 
-      if (!department || department.length > 60) {
-        sendJson(res, 400, { error: "Department is required and must stay under 60 characters." });
-        return;
-      }
+        if (question.required && !value) {
+          throw new Error(`The question "${question.label}" is required.`);
+        }
 
-      if (!position || position.length > 70) {
-        sendJson(res, 400, { error: "Position is required and must stay under 70 characters." });
-        return;
-      }
+        if (value.length > limit) {
+          throw new Error(`The answer for "${question.label}" must stay under ${limit} characters.`);
+        }
 
-      if (!summary || summary.length > 600) {
-        sendJson(res, 400, { error: "Summary is required and must stay under 600 characters." });
-        return;
-      }
-
-      if (!validateUrl(referenceLink)) {
-        sendJson(res, 400, { error: "Reference link must be a valid http or https URL." });
-        return;
-      }
+        return {
+          questionId: question.id,
+          label: question.label,
+          type: question.type,
+          value
+        };
+      });
 
       const current = await getJsonFile("data/applications.json");
+      const timestamp = new Date().toISOString();
       const nextItem = {
         id: crypto.randomUUID(),
-        applicantName,
-        applicantDiscord,
-        department,
-        position,
-        referenceLink,
-        summary,
+        formId: form.id,
+        formTitle: form.title,
+        department: form.department,
+        applicantDiscordId: session.discordId,
+        applicantUsername: session.username,
+        applicantName: session.displayName || session.username || "Applicant",
         status: "pending",
-        createdAt: new Date().toISOString(),
-        createdBy: session.displayName || session.username || "Authorized User",
+        createdAt: timestamp,
+        submittedAt: timestamp,
+        createdBy: session.displayName || session.username || "Applicant",
+        answers,
         reviewedAt: null,
         reviewedBy: "",
         decisionNote: ""
@@ -143,10 +163,15 @@ module.exports = async function handler(req, res) {
         items: sortItems([nextItem, ...(Array.isArray(current.items) ? current.items : [])])
       };
 
-      await putJsonFile("data/applications.json", nextData, `Create application record: ${applicantName}`);
+      await putJsonFile(
+        "data/applications.json",
+        nextData,
+        `Submit application: ${form.title} by ${nextItem.applicantName}`
+      );
+
       sendJson(res, 201, { item: nextItem });
     } catch (error) {
-      sendJson(res, 500, { error: error.message || "Failed to create the application record." });
+      sendJson(res, 400, { error: error.message || "Your application could not be submitted." });
     }
 
     return;
@@ -154,21 +179,14 @@ module.exports = async function handler(req, res) {
 
   if (req.method === "PATCH") {
     if (!permissions.applicationManage) {
-      sendJson(res, 403, { error: "You are not allowed to review application records." });
-      return;
-    }
-
-    if (process.env.VERCEL && !hasGithubWriteConfig()) {
-      sendJson(res, 503, {
-        error: "Application writes on Vercel require GITHUB_REPOSITORY and GITHUB_TOKEN environment variables."
-      });
+      sendJson(res, 403, { error: "You are not allowed to review application submissions." });
       return;
     }
 
     try {
       const body = await readJsonBody(req);
       const id = String(body.id || "").trim();
-      const status = String(body.status || "").trim().toLowerCase();
+      const status = normalizeStatus(body.status);
       const decisionNote = String(body.decisionNote || "").trim();
 
       if (!id) {
@@ -176,8 +194,8 @@ module.exports = async function handler(req, res) {
         return;
       }
 
-      if (!["accepted", "denied"].includes(status)) {
-        sendJson(res, 400, { error: "Status must be accepted or denied." });
+      if (!["accepted", "denied", "pending"].includes(status)) {
+        sendJson(res, 400, { error: "Status must be accepted, denied, or pending." });
         return;
       }
 
@@ -191,13 +209,12 @@ module.exports = async function handler(req, res) {
       const index = items.findIndex((item) => item.id === id);
 
       if (index === -1) {
-        sendJson(res, 404, { error: "Application record not found." });
+        sendJson(res, 404, { error: "Application submission not found." });
         return;
       }
 
-      const currentItem = items[index];
       const updatedItem = {
-        ...currentItem,
+        ...items[index],
         status,
         decisionNote,
         reviewedAt: new Date().toISOString(),
@@ -210,12 +227,16 @@ module.exports = async function handler(req, res) {
       await putJsonFile(
         "data/applications.json",
         { items: sortItems(nextItems) },
-        `Review application record: ${currentItem.applicantName} -> ${status}`
+        `Review application submission: ${updatedItem.applicantName || updatedItem.formTitle || updatedItem.id} -> ${status}`
       );
 
-      sendJson(res, 200, { item: updatedItem });
+      const dmResult = await sendApplicationStatusDm(updatedItem);
+      sendJson(res, 200, {
+        item: updatedItem,
+        warning: dmResult.warning || ""
+      });
     } catch (error) {
-      sendJson(res, 500, { error: error.message || "Failed to review the application record." });
+      sendJson(res, 500, { error: error.message || "Application status could not be updated." });
     }
 
     return;

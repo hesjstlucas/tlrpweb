@@ -8,19 +8,6 @@ function sendJson(res, statusCode, payload) {
   res.end(JSON.stringify(payload));
 }
 
-function validateUrl(value) {
-  if (!value) {
-    return true;
-  }
-
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" || url.protocol === "http:";
-  } catch {
-    return false;
-  }
-}
-
 async function readJsonBody(req) {
   if (req.body && typeof req.body === "object") {
     return req.body;
@@ -39,21 +26,49 @@ async function readJsonBody(req) {
   return JSON.parse(Buffer.concat(chunks).toString("utf8"));
 }
 
-function sortItems(items = []) {
+function sortForms(items = []) {
   return [...items].sort((left, right) => new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime());
+}
+
+function normalizeQuestion(question, index) {
+  const label = String(question?.label || "").trim();
+  const placeholder = String(question?.placeholder || "").trim();
+  const type = String(question?.type || "short").trim().toLowerCase();
+  const required = question?.required !== false;
+  const id = String(question?.id || "").trim() || crypto.randomUUID();
+
+  if (!label || label.length > 100) {
+    throw new Error(`Question ${index + 1} needs a prompt under 100 characters.`);
+  }
+
+  if (placeholder.length > 140) {
+    throw new Error(`Question ${index + 1} placeholder must stay under 140 characters.`);
+  }
+
+  if (!["short", "long"].includes(type)) {
+    throw new Error(`Question ${index + 1} must use the short or long answer type.`);
+  }
+
+  return {
+    id,
+    label,
+    placeholder,
+    type,
+    required
+  };
 }
 
 module.exports = async function handler(req, res) {
   if (req.method === "GET") {
     try {
-      const data = await getJsonFile("data/application-portals.json");
-      const items = sortItems(Array.isArray(data.items) ? data.items : []);
+      const data = await getJsonFile("data/application-forms.json");
+      const items = sortForms(Array.isArray(data.items) ? data.items : []);
       const id = String(req.query.id || "").trim();
 
       if (id) {
         const item = items.find((entry) => entry.id === id);
         if (!item) {
-          sendJson(res, 404, { error: "Application page not found." });
+          sendJson(res, 404, { error: "Application form not found." });
           return;
         }
 
@@ -63,7 +78,7 @@ module.exports = async function handler(req, res) {
 
       sendJson(res, 200, { items });
     } catch (error) {
-      sendJson(res, 500, { error: error.message });
+      sendJson(res, 500, { error: error.message || "Application forms could not be loaded." });
     }
 
     return;
@@ -79,13 +94,13 @@ module.exports = async function handler(req, res) {
   const permissions = session?.permissions || {};
 
   if (!permissions.applicationCreate) {
-    sendJson(res, 403, { error: "You are not allowed to publish public application pages." });
+    sendJson(res, 403, { error: "You are not allowed to create application forms." });
     return;
   }
 
   if (process.env.VERCEL && !hasGithubWriteConfig()) {
     sendJson(res, 503, {
-      error: "Application page writes on Vercel require GITHUB_REPOSITORY and GITHUB_TOKEN environment variables."
+      error: "Application form writes on Vercel require GITHUB_REPOSITORY and GITHUB_TOKEN environment variables."
     });
     return;
   }
@@ -95,8 +110,8 @@ module.exports = async function handler(req, res) {
     const title = String(body.title || "").trim();
     const department = String(body.department || "").trim();
     const overview = String(body.overview || "").trim();
-    const details = String(body.details || "").trim();
-    const applyLink = String(body.applyLink || "").trim();
+    const intro = String(body.intro || "").trim();
+    const rawQuestions = Array.isArray(body.questions) ? body.questions : [];
 
     if (!title || title.length > 90) {
       sendJson(res, 400, { error: "Application title is required and must stay under 90 characters." });
@@ -109,39 +124,40 @@ module.exports = async function handler(req, res) {
     }
 
     if (!overview || overview.length > 240) {
-      sendJson(res, 400, { error: "Overview is required and must stay under 240 characters." });
+      sendJson(res, 400, { error: "Button overview is required and must stay under 240 characters." });
       return;
     }
 
-    if (!details || details.length > 2500) {
-      sendJson(res, 400, { error: "Details are required and must stay under 2500 characters." });
+    if (!intro || intro.length > 1800) {
+      sendJson(res, 400, { error: "Application intro is required and must stay under 1800 characters." });
       return;
     }
 
-    if (!validateUrl(applyLink)) {
-      sendJson(res, 400, { error: "Apply link must be a valid http or https URL." });
+    if (!rawQuestions.length || rawQuestions.length > 12) {
+      sendJson(res, 400, { error: "Each form needs between 1 and 12 questions." });
       return;
     }
 
-    const current = await getJsonFile("data/application-portals.json");
+    const questions = rawQuestions.map((question, index) => normalizeQuestion(question, index));
+    const current = await getJsonFile("data/application-forms.json");
     const nextItem = {
       id: crypto.randomUUID(),
       title,
       department,
       overview,
-      details,
-      applyLink,
+      intro,
+      questions,
       createdAt: new Date().toISOString(),
       createdBy: session.displayName || session.username || "Directive"
     };
 
     const nextData = {
-      items: sortItems([nextItem, ...(Array.isArray(current.items) ? current.items : [])])
+      items: sortForms([nextItem, ...(Array.isArray(current.items) ? current.items : [])])
     };
 
-    await putJsonFile("data/application-portals.json", nextData, `Publish application page: ${title}`);
+    await putJsonFile("data/application-forms.json", nextData, `Create application form: ${title}`);
     sendJson(res, 201, { item: nextItem });
   } catch (error) {
-    sendJson(res, 500, { error: error.message || "Failed to publish the application page." });
+    sendJson(res, 500, { error: error.message || "Application form could not be created." });
   }
 };

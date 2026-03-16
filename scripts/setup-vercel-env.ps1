@@ -237,6 +237,7 @@ $githubBranch = Read-PlainValue -Label "GitHub branch" -Default "main" -Required
 $values = [ordered]@{
   DISCORD_CLIENT_ID = Read-PlainValue -Label "Discord Client ID" -Required
   DISCORD_CLIENT_SECRET = Read-SecretValue -Label "Discord Client Secret" -Required
+  DISCORD_BOT_TOKEN = Read-SecretValue -Label "Discord Bot Token for applicant status DMs (optional)"
   DISCORD_REDIRECT_URI = $redirectUri
   DISCORD_GUILD_ID = Read-PlainValue -Label "Discord Server / Guild ID"
   DISCORD_OWNER_ID = Read-PlainValue -Label "Discord Owner User ID"
